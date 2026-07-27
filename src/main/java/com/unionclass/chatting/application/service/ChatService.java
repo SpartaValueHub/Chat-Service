@@ -7,6 +7,7 @@ import com.unionclass.chatting.application.port.out.ChatServiceRepositoryPort;
 import com.unionclass.chatting.domain.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -17,9 +18,9 @@ public class ChatService implements ChatServiceUseCase {
 
 
     @Override
-    public void sendChatMessage(ChatMessageRequestDto chatMessageRequestDto) {
+    public Mono<Void> sendChatMessage(ChatMessageRequestDto chatMessageRequestDto) {
         ChatMessage chatMessage = chatServiceMapper.fromChatMessageRequestDto(chatMessageRequestDto);
-        chatServiceRepositoryPort.sendChatMessage(chatServiceMapper.toChatMessageSaveDto(chatMessage));
+        return chatServiceRepositoryPort.sendChatMessage(chatServiceMapper.toChatMessageSaveDto(chatMessage));
     }
 
 }

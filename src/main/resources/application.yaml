@@ -5,12 +5,25 @@ spring:
   application:
     name: chatting-service
 
+  codec:
+    max-in-memory-size: 10MB
+
+  # Spring Boot 4+: 연결/인증은 spring.mongodb.* (구 spring.data.mongodb.uri 는 바인딩되지 않음 → credential=null)
+  # WebFlux + reactive Mongo: starter-data-mongodb-reactive + 아래 인증/replicaSet 필수
+  # Change Stream / @Tailable 은 replica set 필요. 전체 URI 오버라이드: SPRING_MONGODB_URI
+  mongodb:
+    host: mongo1
+    port: 27017
+    additional-hosts:
+      - mongo2:27017
+      - mongo3:27017
+    database: chatting_db
+    username: ${MONGODB_USERNAME:admin}
+    password: ${MONGODB_PASSWORD:admin123}
+    authentication-database: admin
+    replica-set-name: rs0
   data:
     mongodb:
-      # 로컬 단일 노드 기본값 / 클러스터는 MONGODB_URI로 교체
-      # 예) mongodb://user:pass@mongo1:27017,mongo2:27017,mongo3:27017/chatting_db?replicaSet=rs0&authSource=admin
-      uri: ${MONGODB_URI:mongodb://admin:admin123@localhost:27017,localhost:27018,localhost:27019/?replicaSet=rs0&authSource=admin}
-#      uri: ${MONGODB_URI:mongodb+srv://jason_db_user:UTKSmOrHXyHbTPpF@spharos.kz3esds.mongodb.net/}
       auto-index-creation: true
 
 eureka:
@@ -22,6 +35,14 @@ eureka:
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
 
 logging:
   level:

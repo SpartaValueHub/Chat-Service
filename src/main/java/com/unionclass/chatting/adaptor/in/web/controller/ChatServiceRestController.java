@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/chat")
@@ -18,10 +19,10 @@ public class ChatServiceRestController {
     private final ChatMessageMapper chatMessageMapper;
 
     @PostMapping("/send")
-    public void sendChatMessage(
+    public Mono<Void> sendChatMessage(
             @RequestBody ChatMessageRequestVo chatMessageRequestVo
     ) {
-        chatServiceUseCase.sendChatMessage( chatMessageMapper.toDto(
+        return chatServiceUseCase.sendChatMessage(chatMessageMapper.toDto(
                 chatMessageRequestVo
         ));
     }
