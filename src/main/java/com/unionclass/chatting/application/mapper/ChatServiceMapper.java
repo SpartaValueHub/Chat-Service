@@ -4,6 +4,8 @@ import com.unionclass.chatting.application.port.dto.ChatMessageGetDto;
 import com.unionclass.chatting.application.port.dto.ChatMessageRequestDto;
 import com.unionclass.chatting.application.port.dto.ChatMessageResponseDto;
 import com.unionclass.chatting.application.port.dto.ChatMessageSaveDto;
+import com.unionclass.chatting.application.port.dto.ChatRoomGetDto;
+import com.unionclass.chatting.application.port.dto.ChatRoomResponseDto;
 import com.unionclass.chatting.domain.model.ChatMessage;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -54,6 +56,21 @@ public class ChatServiceMapper {
                 .messageType(chatMessageRequestDto.getMessageType())
                 .message(chatMessageRequestDto.getMessage())
                 .senderUuid(chatMessageRequestDto.getSenderUuid())
+                .build();
+    }
+
+    public Flux<ChatRoomResponseDto> toChatRoomResponseDtoFlux(Flux<ChatRoomGetDto> chatRoomGetDtoFlux) {
+        return chatRoomGetDtoFlux.map(this::toChatRoomResponseDto);
+    }
+
+    public ChatRoomResponseDto toChatRoomResponseDto(ChatRoomGetDto chatRoomGetDto) {
+        return ChatRoomResponseDto.builder()
+                .chatRoomUuid(chatRoomGetDto.getChatRoomUuid())
+                .roomName(chatRoomGetDto.getRoomName())
+                .lastMessage(chatRoomGetDto.getLastMessage())
+                .lastMessageAt(chatRoomGetDto.getLastMessageAt())
+                .createdAt(chatRoomGetDto.getCreatedAt())
+                .updatedAt(chatRoomGetDto.getUpdatedAt())
                 .build();
     }
 
