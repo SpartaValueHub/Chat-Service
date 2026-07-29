@@ -17,7 +17,6 @@ public class ChatMessageResponseVo {
     private String updatedAt;
 
     @Builder
-
     public ChatMessageResponseVo(
             String chatMessageUuid,
             String chatRoomUuid,
