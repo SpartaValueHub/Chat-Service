@@ -2,6 +2,8 @@ server:
   port: 0
 
 spring:
+  config:
+    import: optional:file:.env[.properties]
   mongodb:
     uri: ${SPRING_MONGODB_URI}
 

@@ -5,9 +5,8 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:local}
   codec:
     max-in-memory-size: 10MB
-  data:
-    mongodb:
-      auto-index-creation: true
+  mongodb:
+    auto-index-creation: true
 
 eureka:
   client:
@@ -15,7 +14,7 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${random.uuid}
+    # instance-id는 EurekaInstancePortCustomizer에서 실제 할당 포트로 설정 (예: chat-service:51234)
 
 springdoc:
   api-docs:
