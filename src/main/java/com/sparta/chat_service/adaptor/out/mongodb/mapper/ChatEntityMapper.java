@@ -1,11 +1,11 @@
-package com.unionclass.chatting.adaptor.out.mongodb.mapper;
+package com.sparta.chat_service.adaptor.out.mongodb.mapper;
 
-import com.unionclass.chatting.adaptor.out.mongodb.entity.ChatMessageEntity;
-import com.unionclass.chatting.adaptor.out.mongodb.entity.ChatRoomEntity;
-import com.unionclass.chatting.application.port.dto.ChatMessageGetDto;
-import com.unionclass.chatting.application.port.dto.ChatMessageSaveDto;
-import com.unionclass.chatting.application.port.dto.ChatRoomGetDto;
-import com.unionclass.chatting.application.port.dto.ChatRoomSaveDto;
+import com.sparta.chat_service.adaptor.out.mongodb.entity.ChatMessageEntity;
+import com.sparta.chat_service.adaptor.out.mongodb.entity.ChatRoomEntity;
+import com.sparta.chat_service.application.port.dto.ChatMessageGetDto;
+import com.sparta.chat_service.application.port.dto.ChatMessageSaveDto;
+import com.sparta.chat_service.application.port.dto.ChatRoomGetDto;
+import com.sparta.chat_service.application.port.dto.ChatRoomSaveDto;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 

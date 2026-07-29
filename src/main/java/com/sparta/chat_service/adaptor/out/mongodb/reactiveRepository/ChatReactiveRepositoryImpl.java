@@ -1,10 +1,10 @@
-package com.unionclass.chatting.adaptor.out.mongodb.reactiveRepository;
+package com.sparta.chat_service.adaptor.out.mongodb.reactiveRepository;
 
 import com.mongodb.client.model.changestream.OperationType;
-import com.unionclass.chatting.adaptor.out.mongodb.entity.ChatMessageEntity;
-import com.unionclass.chatting.adaptor.out.mongodb.mapper.ChatEntityMapper;
-import com.unionclass.chatting.application.port.dto.ChatMessageGetDto;
-import com.unionclass.chatting.application.port.out.ChatServiceReactiveRepositoryPort;
+import com.sparta.chat_service.adaptor.out.mongodb.entity.ChatMessageEntity;
+import com.sparta.chat_service.adaptor.out.mongodb.mapper.ChatEntityMapper;
+import com.sparta.chat_service.application.port.dto.ChatMessageGetDto;
+import com.sparta.chat_service.application.port.out.ChatServiceReactiveRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bson.types.ObjectId;

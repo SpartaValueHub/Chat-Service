@@ -1,12 +1,12 @@
-package com.unionclass.chatting.application.mapper;
+package com.sparta.chat_service.application.mapper;
 
-import com.unionclass.chatting.application.port.dto.ChatMessageGetDto;
-import com.unionclass.chatting.application.port.dto.ChatMessageRequestDto;
-import com.unionclass.chatting.application.port.dto.ChatMessageResponseDto;
-import com.unionclass.chatting.application.port.dto.ChatMessageSaveDto;
-import com.unionclass.chatting.application.port.dto.ChatRoomGetDto;
-import com.unionclass.chatting.application.port.dto.ChatRoomResponseDto;
-import com.unionclass.chatting.domain.model.ChatMessage;
+import com.sparta.chat_service.application.port.dto.ChatMessageGetDto;
+import com.sparta.chat_service.application.port.dto.ChatMessageRequestDto;
+import com.sparta.chat_service.application.port.dto.ChatMessageResponseDto;
+import com.sparta.chat_service.application.port.dto.ChatMessageSaveDto;
+import com.sparta.chat_service.application.port.dto.ChatRoomGetDto;
+import com.sparta.chat_service.application.port.dto.ChatRoomResponseDto;
+import com.sparta.chat_service.domain.model.ChatMessage;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 

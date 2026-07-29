@@ -1,0 +1,16 @@
+server:
+  port: 0
+
+spring:
+  mongodb:
+    uri: ${SPRING_MONGODB_URI}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+
+logging:
+  level:
+    root: WARN
+    org.springframework.data.mongodb: WARN
