@@ -1,4 +1,4 @@
-package com.unionclass.chatting.adaptor.out.mongodb.config;
+package com.sparta.chat_service.adaptor.out.mongodb.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

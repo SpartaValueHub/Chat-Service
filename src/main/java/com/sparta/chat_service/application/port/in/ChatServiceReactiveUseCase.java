@@ -1,6 +1,6 @@
-package com.unionclass.chatting.application.port.in;
+package com.sparta.chat_service.application.port.in;
 
-import com.unionclass.chatting.application.port.dto.ChatMessageResponseDto;
+import com.sparta.chat_service.application.port.dto.ChatMessageResponseDto;
 import reactor.core.publisher.Flux;
 
 public interface ChatServiceReactiveUseCase {

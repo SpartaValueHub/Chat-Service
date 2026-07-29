@@ -1,12 +1,12 @@
-package com.unionclass.chatting.adaptor.out.mongodb.restRepository;
+package com.sparta.chat_service.adaptor.out.mongodb.restRepository;
 
-import com.unionclass.chatting.adaptor.out.mongodb.entity.ChatMessageEntity;
-import com.unionclass.chatting.adaptor.out.mongodb.entity.ChatRoomEntity;
-import com.unionclass.chatting.adaptor.out.mongodb.mapper.ChatEntityMapper;
-import com.unionclass.chatting.application.port.dto.ChatMessageSaveDto;
-import com.unionclass.chatting.application.port.dto.ChatRoomGetDto;
-import com.unionclass.chatting.application.port.dto.ChatRoomSaveDto;
-import com.unionclass.chatting.application.port.out.ChatServiceRepositoryPort;
+import com.sparta.chat_service.adaptor.out.mongodb.entity.ChatMessageEntity;
+import com.sparta.chat_service.adaptor.out.mongodb.entity.ChatRoomEntity;
+import com.sparta.chat_service.adaptor.out.mongodb.mapper.ChatEntityMapper;
+import com.sparta.chat_service.application.port.dto.ChatMessageSaveDto;
+import com.sparta.chat_service.application.port.dto.ChatRoomGetDto;
+import com.sparta.chat_service.application.port.dto.ChatRoomSaveDto;
+import com.sparta.chat_service.application.port.out.ChatServiceRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;

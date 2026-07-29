@@ -1,4 +1,4 @@
-package com.unionclass.chatting.application.port.dto;
+package com.sparta.chat_service.application.port.dto;
 
 import lombok.Builder;
 import lombok.Getter;

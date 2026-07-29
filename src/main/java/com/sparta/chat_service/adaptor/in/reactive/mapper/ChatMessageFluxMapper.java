@@ -1,7 +1,7 @@
-package com.unionclass.chatting.adaptor.in.reactive.mapper;
+package com.sparta.chat_service.adaptor.in.reactive.mapper;
 
-import com.unionclass.chatting.adaptor.in.reactive.vo.ChatMessageResponseVo;
-import com.unionclass.chatting.application.port.dto.ChatMessageResponseDto;
+import com.sparta.chat_service.adaptor.in.reactive.vo.ChatMessageResponseVo;
+import com.sparta.chat_service.application.port.dto.ChatMessageResponseDto;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 

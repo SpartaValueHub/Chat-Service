@@ -1,8 +1,8 @@
-package com.unionclass.chatting.adaptor.in.reactive.controller;
+package com.sparta.chat_service.adaptor.in.reactive.controller;
 
-import com.unionclass.chatting.adaptor.in.reactive.mapper.ChatMessageFluxMapper;
-import com.unionclass.chatting.adaptor.in.reactive.vo.ChatMessageResponseVo;
-import com.unionclass.chatting.application.port.in.ChatServiceReactiveUseCase;
+import com.sparta.chat_service.adaptor.in.reactive.mapper.ChatMessageFluxMapper;
+import com.sparta.chat_service.adaptor.in.reactive.vo.ChatMessageResponseVo;
+import com.sparta.chat_service.application.port.in.ChatServiceReactiveUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
