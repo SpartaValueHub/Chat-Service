@@ -1,4 +1,4 @@
-package com.unionclass.chatting.adaptor.in.web.vo;
+package com.sparta.chat_service.adaptor.in.web.vo;
 
 import lombok.Getter;
 

@@ -1,11 +1,11 @@
-package com.unionclass.chatting.adaptor.in.web.controller;
+package com.sparta.chat_service.adaptor.in.web.controller;
 
-import com.unionclass.chatting.adaptor.in.web.mapper.ChatMessageMapper;
-import com.unionclass.chatting.adaptor.in.web.mapper.ChatRoomMapper;
-import com.unionclass.chatting.adaptor.in.web.vo.ChatMessageRequestVo;
-import com.unionclass.chatting.adaptor.in.web.vo.ChatRoomRequestVo;
-import com.unionclass.chatting.adaptor.in.web.vo.ChatRoomResponseVo;
-import com.unionclass.chatting.application.port.in.ChatServiceUseCase;
+import com.sparta.chat_service.adaptor.in.web.mapper.ChatMessageMapper;
+import com.sparta.chat_service.adaptor.in.web.mapper.ChatRoomMapper;
+import com.sparta.chat_service.adaptor.in.web.vo.ChatMessageRequestVo;
+import com.sparta.chat_service.adaptor.in.web.vo.ChatRoomRequestVo;
+import com.sparta.chat_service.adaptor.in.web.vo.ChatRoomResponseVo;
+import com.sparta.chat_service.application.port.in.ChatServiceUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;

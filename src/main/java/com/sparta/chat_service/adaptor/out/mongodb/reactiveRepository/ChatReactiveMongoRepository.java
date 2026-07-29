@@ -1,6 +1,6 @@
-package com.unionclass.chatting.adaptor.out.mongodb.reactiveRepository;
+package com.sparta.chat_service.adaptor.out.mongodb.reactiveRepository;
 
-import com.unionclass.chatting.adaptor.out.mongodb.entity.ChatMessageEntity;
+import com.sparta.chat_service.adaptor.out.mongodb.entity.ChatMessageEntity;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.Tailable;

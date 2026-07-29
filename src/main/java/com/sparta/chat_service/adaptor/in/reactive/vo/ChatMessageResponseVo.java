@@ -1,4 +1,4 @@
-package com.unionclass.chatting.adaptor.in.reactive.vo;
+package com.sparta.chat_service.adaptor.in.reactive.vo;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package com.unionclass.chatting.adaptor.out.mongodb.entity;
+package com.sparta.chat_service.adaptor.out.mongodb.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

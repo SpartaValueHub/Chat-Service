@@ -1,4 +1,4 @@
-package com.unionclass.chatting.domain.model;
+package com.sparta.chat_service.domain.model;
 
 import lombok.Builder;
 import lombok.Getter;

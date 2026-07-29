@@ -1,8 +1,8 @@
-package com.unionclass.chatting.application.port.out;
+package com.sparta.chat_service.application.port.out;
 
-import com.unionclass.chatting.application.port.dto.ChatMessageSaveDto;
-import com.unionclass.chatting.application.port.dto.ChatRoomGetDto;
-import com.unionclass.chatting.application.port.dto.ChatRoomSaveDto;
+import com.sparta.chat_service.application.port.dto.ChatMessageSaveDto;
+import com.sparta.chat_service.application.port.dto.ChatRoomGetDto;
+import com.sparta.chat_service.application.port.dto.ChatRoomSaveDto;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

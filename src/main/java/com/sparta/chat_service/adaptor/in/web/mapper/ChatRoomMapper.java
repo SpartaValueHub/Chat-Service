@@ -1,9 +1,9 @@
-package com.unionclass.chatting.adaptor.in.web.mapper;
+package com.sparta.chat_service.adaptor.in.web.mapper;
 
-import com.unionclass.chatting.adaptor.in.web.vo.ChatRoomRequestVo;
-import com.unionclass.chatting.adaptor.in.web.vo.ChatRoomResponseVo;
-import com.unionclass.chatting.application.port.dto.ChatRoomResponseDto;
-import com.unionclass.chatting.application.port.dto.ChatRoomSaveDto;
+import com.sparta.chat_service.adaptor.in.web.vo.ChatRoomRequestVo;
+import com.sparta.chat_service.adaptor.in.web.vo.ChatRoomResponseVo;
+import com.sparta.chat_service.application.port.dto.ChatRoomResponseDto;
+import com.sparta.chat_service.application.port.dto.ChatRoomSaveDto;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 

@@ -1,7 +1,7 @@
-package com.unionclass.chatting.adaptor.in.web.mapper;
+package com.sparta.chat_service.adaptor.in.web.mapper;
 
-import com.unionclass.chatting.adaptor.in.web.vo.ChatMessageRequestVo;
-import com.unionclass.chatting.application.port.dto.ChatMessageRequestDto;
+import com.sparta.chat_service.adaptor.in.web.vo.ChatMessageRequestVo;
+import com.sparta.chat_service.application.port.dto.ChatMessageRequestDto;
 import org.springframework.stereotype.Component;
 
 @Component
