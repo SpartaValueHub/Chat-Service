@@ -1,5 +1,5 @@
-# reactive-web-mongodb
+# Chat Service
 
-프로젝트 구조, 계층별 책임, 메시지 저장 및 SSE/Tailable Cursor/Change Stream 작동 흐름은
-[아키텍처 분석 문서](docs/ARCHITECTURE_ANALYSIS.md)를 참고하세요.
-# Chat-Service
+ValueHub MSA 채팅(chat) 마이크로서비스입니다.
+
+설정 컨벤션은 [CONFIG.md](./CONFIG.md)를 참고하세요.
