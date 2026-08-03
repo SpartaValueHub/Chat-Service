@@ -72,7 +72,7 @@ Eureka Dashboard (`http://localhost:8761`) 에서 `CHAT-SERVICE` 등록을 확�
 ### local MongoDB URI 예시
 
 ```
-mongodb://admin:password@localhost:27017,localhost:27018,localhost:27019/chatting_db?authSource=admin&replicaSet=rs0
+mongodb://admin:your-password-here@localhost:27017,localhost:27018,localhost:27019/chatting_db?authSource=admin&replicaSet=rs0
 ```
 
 ## Gateway 연동
