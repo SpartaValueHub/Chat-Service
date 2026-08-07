@@ -10,8 +10,7 @@ import reactor.core.publisher.Flux;
 @Repository
 public interface ChatReactiveMongoRepository extends ReactiveMongoRepository<ChatMessageEntity, String> {
 
-    @Tailable
-    @Query("{ 'chatRoomUuid' : ?0 }")
-    Flux<ChatMessageEntity> findByChatRoomUuid(String chatRoomUuid);
-
+	@Tailable
+	@Query("{ 'room_id' : ?0 }")
+	Flux<ChatMessageEntity> findByRoomId(String roomId);
 }
