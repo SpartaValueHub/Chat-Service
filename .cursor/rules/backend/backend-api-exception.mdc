@@ -1,0 +1,53 @@
+---
+description: Validation·계층별 예외·MSA Error Response·Kafka·Transaction
+globs: "**/adaptor/**/*.java,**/*Controller.java,**/*Exception*.java,**/*Handler*.java,**/*Consumer*.java"
+alwaysApply: true
+---
+
+# API Validation·예외
+
+Happy Path만 작성하고 예외 처리를 누락하지 않는다. 비즈니스 로직 구현 시 예외를 함께 설계·구현한다.
+
+## 검증은 어디서
+
+| 종류 | 위치 |
+|------|------|
+| 형식(필수·길이·이메일) | Inbound Bean Validation + `@Valid` |
+| 불변식·상태 전이 | Domain |
+| 중복·권한 등 외부 조회 | Application + Output Port |
+| DB 제약 | Outbound |
+
+같은 검증을 Web/App/Domain에 근거 없이 복제하지 않음.
+
+## 계층별 예외 분리 (Hexagonal)
+
+| 계층 | 역할 |
+|------|------|
+| Domain | Spring/Web 비의존 순수 업무 예외. 예: `ListingNotFoundException`, `DailyLimitExceededException` |
+| Inbound | `@RestControllerAdvice`가 Domain/Application 예외 → 표준 JSON + HTTP Status 변환 |
+| Outbound | DB·외부 API 실패는 인프라 예외로 wrap하거나 적절한 Domain 예외로 변환해 안쪽으로 전파 |
+
+- Domain/Application: `ResponseStatusException`·HTTP Status·`ResponseEntity` 금지
+- 전용 예외 + 안정적 `code` 사용
+- 인증 실패: 존재 여부·비번 오류 구분 없이 동일 외부 메시지
+- 예외에 비밀번호·token·secret 넣지 않음
+
+## HTTP 변환 (전역 예외 처리기)
+
+필수 필드: `timestamp`(ISO-8601), `status`, `code`, `message`, `path`
+Validation: `fieldErrors[{field, code, message}]`
+스택·SQL·Mongo query·내부 클래스명 외부 노출 금지.
+
+## MSA·비동기
+
+- 에러 응답·로그에 `Trace ID`(또는 Correlation ID) 포함 가능 구조를 고려한다
+- Kafka Consumer: 재시도 상한·DLQ(또는 격리)로 무한 재시도를 방지한다. 일시 오류와 영구 오류를 구분한다
+
+## Transaction
+
+- 비즈니스 예외 발생 시 롤백이 필요하면 Application Service 공개 메서드의 `@Transactional` 범위를 확인한다
+- Controller·Mapper에 `@Transactional` 금지 (`backend-architecture` 참고)
+
+## Legacy
+
+신규 API부터 공통 Error Response 적용. Chat의 `ResponseStatusException`·기존 Map 응답은 요청 없이 일괄 변경 금지.

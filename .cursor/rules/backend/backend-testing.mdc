@@ -1,0 +1,33 @@
+---
+description: 계층별 테스트·데이터 격리·라이브러리 승인
+globs: "src/test/**/*.java,build.gradle*"
+alwaysApply: true
+---
+
+# 테스트
+
+## 계층별
+
+| 대상 | 방법 |
+|------|------|
+| Domain | Spring 없이 단위. 불변식·상태·실패 |
+| Application | Output Port Mock/Fake. 성공·실패 |
+| Controller | Input Port Mock. MVC=`MockMvc` / WebFlux=`WebTestClient` |
+| Persistence | 격리 DB 통합. mapping·constraint·auditing |
+| Reactive | `StepVerifier`. 습관적 `block()` 금지 |
+
+`contextLoads()`만으로 기능 검증 대체 금지. private 구현 직접 테스트 금지.
+
+## 데이터 안전
+
+- local/dev/공유 DB 삭제·변경 금지
+- 테스트 전용 profile/container만. collection/table 자동 drop 금지
+- 비결정 요소는 `Clock`·Generator Port·Fake로 고정
+
+## 라이브러리
+
+이미 있는 것만 사용. Testcontainers·ArchUnit 등 **승인 없이 추가 금지**. 필요 시 이유·대안·범위 보고.
+
+## Legacy
+
+기존 Auth/Chat `contextLoads`는 규칙만으로 삭제하지 않음. 실제 데이터 위험 테스트는 실행 전 보고.

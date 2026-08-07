@@ -1,0 +1,45 @@
+---
+description: Hexagonal 계층·Port·의존성·Transaction (모든 Backend 공통)
+globs: src/main/java/**/*.java
+alwaysApply: true
+---
+
+# Backend 아키텍처 (계층·Port)
+
+패키지: `domain` / `application` / `adaptor` (`adapter`로 일괄 변경 금지)
+
+```text
+Controller → Input Port(*UseCase) → Service → Output Port(*Port) → Adapter
+```
+
+## 의존성
+
+| 계층 | 해도 됨 | 하면 안 됨 |
+|------|---------|------------|
+| Domain | Domain만 | Spring, Web, DB, Reactor |
+| Application | Domain, Port | 구체 Adapter, JpaRepository, Template |
+| Inbound | Input Port, Web VO/Mapper | Service 구현체, Repository, Outbound |
+| Outbound | Output Port 구현, Entity | Inbound, Domain 정책 |
+
+## Port
+
+- Input: 비즈니스 행위 이름. HTTP/Status 금지. 관련 없는 기능 누적 금지
+- Output: 외부에 요구하는 행위. Entity·`Pageable`·Spring Data 타입 노출 금지
+- 저장·조회는 Domain 우선. Projection만 `port.out.dto`
+- 책임이 다르면 새 Port 생성. 기술명(`Reactive`/`Mongo`/`Rest`)보다 행위명
+
+```text
+OK: CreateOrderUseCase / SaveOrderPort
+NG: ReactiveOrderUseCase / MongoOrderRepositoryPort
+```
+
+## Transaction
+
+- 경계는 Application Service 공개 메서드만
+- Controller·Mapper에 `@Transactional` 금지
+- 기술별 세부: `backend-mvc-jpa` / `backend-reactive-mongo`
+
+## Legacy
+
+- 신규·수정 범위부터 적용. 요청 없이 기존 Port/DTO 일괄 변경 금지
+- 충돌 시 임의 마이그레이션하지 말고 영향·선택지를 먼저 보고

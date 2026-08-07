@@ -1,0 +1,46 @@
+---
+description: API 작업 완료 시 /docs에 API 명세서 작성·갱신
+globs: "**/adaptor/in/**/*.java,**/*Controller.java,**/docs/**/*.md"
+alwaysApply: true
+---
+
+# API 명세서
+
+## 시점
+
+API(엔드포인트)를 **신규 추가·수정·삭제**하면, 해당 작업과 함께 명세서를 작성·갱신한다.  
+코드만 끝내고 명세를 생략하지 않는다.
+
+## 경로
+
+해당 서비스(프로젝트) 루트에 `docs/`가 없으면 만들고, 그 안에 둔다.
+
+```text
+{project-root}/docs/
+```
+
+- 파일명: `{리소스}-api.md` (예: `auth-api.md`, `order-api.md`)
+- 리소스별로 파일을 나눈다. 요청 없이 기존 명세를 다른 형식으로 일괄 이관하지 않는다.
+
+## 필수 항목
+
+엔드포인트마다 아래를 포함한다.
+
+| 항목 | 내용 |
+|------|------|
+| Summary | 한 줄 설명 |
+| Method · Path | `POST /api/v1/orders` |
+| Auth | 필요 여부·방식 (Bearer 등) |
+| Request | Path/Query/Body 필드·타입·필수·제약 |
+| Response | 성공 상태·본문 필드 |
+| Errors | `status` · `code` · 의미 (공통 Error Response 형식) |
+
+요청·응답 예시는 JSON 코드 블록으로 짧게 둔다.  
+비밀번호·token·secret 등 민감값은 예시·본문에 넣지 않는다.
+
+## 작성 원칙
+
+- 실제 Controller·VO·예외 `code`와 **일치**하게 유지한다
+- 변경된 엔드포인트만 갱신한다 (요청 없이 전체 재작성 금지)
+- Domain/Application 내부 구현 세부·SQL·내부 클래스명은 적지 않는다
+- Legacy API는 이번에 손댄 범위만 문서화한다

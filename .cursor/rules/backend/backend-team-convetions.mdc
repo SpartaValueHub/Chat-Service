@@ -1,0 +1,55 @@
+---
+description: BE 공통 - Setter 금지, SOLID, // 주석·변수 설명 (팀 컨벤션)
+globs: "**/src/main/java/**/*.java"
+alwaysApply: true
+---
+
+# BE 팀 코딩 컨벤션
+
+모든 Backend 서비스(Category 포함, 이후 담당 서비스도 동일)에 적용한다.
+
+## Setter 금지
+
+- Lombok 사용은 허용하되 **`@Setter` / public setter 금지**
+- 상태 변경은 factory(`create`/`restore`) 또는 의미가 드러나는 행위 메서드(`rename`, `update` 등)로만 한다
+- JPA Entity: `@Builder` 허용. `@Setter` 없이 `builder()` / `create` / `update`로 값 설정
+- `@Getter`, `@Builder`, `@RequiredArgsConstructor`, `@NoArgsConstructor(access = PROTECTED)` 등은 허용
+
+## SOLID
+
+- 계층·Port·UseCase 경계를 지킨다 (Hexagonal)
+- 한 클래스·메서드에 관련 없는 책임을 섞지 않는다
+- Service가 `*JpaRepository`를 직접 주입하지 않는다 (Adapter 경유)
+- 편의로 기존 UseCase/Port에 무관한 기능을 누적하지 않는다
+
+## 주석 스타일
+
+- **한 줄로 충분한 설명은 `//`만 사용** (`/** ... */`, `/* ... */` 지양)
+- 여러 줄이 꼭 필요할 때만 블록 주석 사용
+- 이모지·AI 티 나는 문장 금지. 팀원이 바로 이해되게 짧게
+
+## 변수 주석
+
+- 필드·주요 지역 변수·상수에 **무엇을 담는지 `//` 주석**을 단다
+- Entity뿐 아니라 Domain, Service, Adapter, VO/DTO 등 **모든 Java 파일**에 적용
+- 자명한 루프 인덱스(`i`)까지 억지로 달 필요는 없다
+
+## 예시
+
+```java
+// OK
+// 외부 공개용 카테고리 UUID
+private final String categoryUuid;
+
+// 카테고리명 변경
+public void rename(String name) { ... }
+
+// NG
+@Setter
+private String name;
+
+/**
+ * 카테고리명을 변경한다.
+ */
+public void rename(String name) { ... }
+```
