@@ -16,37 +16,51 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 
+import java.time.Instant;
+import java.util.Date;
+
 @Repository
 @RequiredArgsConstructor
 public class ChatReactiveRepositoryImpl implements ChatServiceReactiveRepositoryPort {
 
-    private final ChatReactiveMongoRepository chatReactiveMongoRepository;
-    private final ReactiveMongoTemplate reactiveMongoTemplate;
-    private final ChatEntityMapper chatEntityMapper;
+	private static final String COLLECTION = "chat_messages";
 
-    @Override
-    public Flux<ChatMessageGetDto> getChatByChatRoomUuid(String chatRoomUuid) {
-        return chatEntityMapper.chatMessageGetDtoFlux(chatReactiveMongoRepository.findByChatRoomUuid(chatRoomUuid));
-    }
+	private final ChatReactiveMongoRepository chatReactiveMongoRepository;
+	private final ReactiveMongoTemplate reactiveMongoTemplate;
+	private final ChatEntityMapper chatEntityMapper;
 
-    @Override
-    public Flux<ChatMessageGetDto> getLatestChatByChatRoomUuid(String chatRoomUuid) {
-        ChangeStreamOptions options = ChangeStreamOptions.builder()
-                .filter(Aggregation.newAggregation(
-                        Aggregation.match(Criteria.where("operationType").is(OperationType.INSERT.getValue())),
-                        Aggregation.match(Criteria.where("fullDocument.chatRoomUuid").is(chatRoomUuid))
-                )).build();
-        return chatEntityMapper.chatMessageGetDtoFlux(reactiveMongoTemplate.changeStream("chat_message_entity", options, Document.class)
-                .map(ChangeStreamEvent::getBody)
-                .map(document -> ChatMessageEntity.builder()
-                        .id(document.get("_id", ObjectId.class).toString())
-                        .chatRoomUuid(document.getString("chatRoomUuid"))
-                        .senderUuid(document.getString("senderUuid"))
-                        .message(document.getString("message"))
-                        .messageType(document.getString("message_type"))
-                        .createdAt(document.getDate("createdAt").toInstant())
-                        .updatedAt(document.getDate("updatedAt").toInstant())
-                        .build()));
-    }
+	@Override
+	public Flux<ChatMessageGetDto> getChatByChatRoomUuid(String chatRoomUuid) {
+		return chatEntityMapper.chatMessageGetDtoFlux(chatReactiveMongoRepository.findByRoomId(chatRoomUuid));
+	}
 
+	@Override
+	public Flux<ChatMessageGetDto> getLatestChatByChatRoomUuid(String chatRoomUuid) {
+		ChangeStreamOptions options = ChangeStreamOptions.builder()
+				.filter(Aggregation.newAggregation(
+						Aggregation.match(Criteria.where("operationType").is(OperationType.INSERT.getValue())),
+						Aggregation.match(Criteria.where("fullDocument.room_id").is(chatRoomUuid))
+				)).build();
+		return chatEntityMapper.chatMessageGetDtoFlux(
+				reactiveMongoTemplate.changeStream(COLLECTION, options, Document.class)
+						.map(ChangeStreamEvent::getBody)
+						.map(this::toEntity)
+		);
+	}
+
+	private ChatMessageEntity toEntity(Document document) {
+		Object idValue = document.get("_id");
+		String id = idValue instanceof ObjectId objectId ? objectId.toString() : String.valueOf(idValue);
+		Date createdAt = document.getDate("created_at");
+
+		return ChatMessageEntity.builder()
+				.id(id)
+				.roomId(document.getString("room_id"))
+				.senderUuid(document.getString("sender_uuid"))
+				.content(document.getString("content"))
+				.messageType(document.getString("message_type"))
+				.metadata(null)
+				.createdAt(createdAt != null ? createdAt.toInstant() : Instant.now())
+				.build();
+	}
 }

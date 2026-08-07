@@ -1,0 +1,33 @@
+---
+description: DI·네이밍·한글 주석·기존 코드 변경 정책
+globs: src/main/java/**/*.java
+alwaysApply: true
+---
+
+# 코드 스타일·주석
+
+## 책임·DI
+
+- Controller → `*UseCase` / Service → `*Port` (구체 구현체·라이브러리 직접 new 금지)
+- 생성자 주입만 (`@RequiredArgsConstructor` OK). `@Autowired` 필드 주입 금지
+- SOLID 이유로 한 책임 클래스를 Handler/Manager/Processor로 쪼개지 않음
+- 관련 없는 기능을 기존 UseCase/Port에 편의 추가 금지
+
+## 네이밍
+
+- 코드 식별자: 영어. 책임·행위가 드러나게
+- `*UseCase` / `*Port` / `*Adapter` / `*Service` / `*Entity`
+- Web: `*RequestVo`·`*ResponseVo` · App: `*RequestDto`·`*ResponseDto` 등
+- JPA: `*JpaRepository` · Mongo: `*ReactiveMongoRepository`
+- 기존 오타·불명확 이름은 요청 없이 rename 금지
+
+## 한글 주석
+
+쓸 때: 정책·보안·정합성·복잡한 Reactive·비직관적 선택의 **이유**  
+쓰지 않음: Getter/매핑 번역, 자명한 if, 잘못된 구조 정당화
+
+## 변경 정책
+
+- 규칙 맞추려 기존 코드·공개 API 일괄 변경 금지
+- 신규·요청 범위만 적용. 충돌 시 구조·영향·유지/개선안을 먼저 보고
+- 라이브러리·Gradle·환경 변경은 요청 있을 때만
