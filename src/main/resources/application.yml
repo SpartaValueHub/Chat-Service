@@ -7,6 +7,16 @@ spring:
     max-in-memory-size: 10MB
   mongodb:
     auto-index-creation: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+  # servlet 스택 기준 (WebSocket/STOMP). WebFlux는 보조로 유지
+  main:
+    web-application-type: servlet
 
 eureka:
   client:

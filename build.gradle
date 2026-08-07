@@ -26,10 +26,18 @@ ext {
 }
 
 dependencies {
+	// MongoDB (chat_rooms, chat_messages)
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
+	// MySQL (chat_user_profiles)
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	runtimeOnly 'com.mysql:mysql-connector-j'
+	// HTTP + WebSocket/STOMP
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	// 기존 SSE/Reactive API 유지용 (이후 STOMP로 전환 예정)
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:3.0.3'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive-test'
