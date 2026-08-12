@@ -1,0 +1,34 @@
+---
+description: CONTRIBUTING 기준 브랜치·이슈 선발행·Git은 명시 요청 시에만
+alwaysApply: true
+---
+
+# Git 워크플로
+
+기준: `CONTRIBUTING.md` (충돌 시 CONTRIBUTING 우선)
+
+## 작업 시작 순서
+
+1. **GitHub Issue를 먼저 생성** (형식은 `git-commit-pr` 참고)
+2. 사용자가 브랜치 생성·체크아웃: `{type}/{issue-number}-{short-slug}`
+   - type: `feat` / `fix` / `docs` / `chore` / `refactor`
+   - 예: Issue #1 → `feat/1-login-api`, Issue #12 → `docs/12-readme-unify`
+3. **현재 체크아웃 브랜치에서만** 코드 작업
+4. `git add` / `commit` / `push` / PR은 **사용자 명시 요청 시에만**
+
+## 브랜치
+
+`{type}/{issue-number}-*` → `develop` → `main`
+
+- PR base는 항상 `develop` (`main`으로 PR 금지)
+- `main`은 develop 반영 후 배포·릴리스
+- 브랜치 생성·삭제·이름 변경은 **사용자가 직접**
+- 요청 없이 `switch`/`checkout`/`branch`/`merge`/`rebase`/`reset` 금지
+
+## 실행 시점
+
+아래는 **사용자 명시 요청이 있을 때만**:
+
+`git add` / `commit` / `push` · `gh pr create`/`merge` · `git tag`
+
+코드 작성 후 자동 Commit·Push·PR·Merge 금지.

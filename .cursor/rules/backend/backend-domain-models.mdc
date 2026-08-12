@@ -1,0 +1,45 @@
+---
+description: Domain·DTO·Entity·UUID·시간·Mapper 경계 (모든 Backend 공통)
+globs: src/main/java/**/*.java
+alwaysApply: true
+---
+
+# Domain·경계 모델
+
+## Domain vs Entity
+
+- Domain ≠ Persistence Entity. 합치지 않음
+- Domain: 불변식·상태 전이·정책. Spring/JPA/Mongo/Web/Reactor 금지. Lombok OK
+- Entity: `adaptor.out`만. `@Entity`/`@Document`/`@Id`/감사 필드는 Entity만
+- Entity를 Controller·Port 계약으로 노출 금지
+
+## DTO / VO
+
+| 종류 | 위치 | 용도 |
+|------|------|------|
+| Web VO | `adaptor.in` | HTTP 요청·응답. 밖으로 전달 금지 |
+| Input DTO | `port.in.dto` | UseCase 계약 |
+| Output DTO | `port.out.dto` | Projection·외부 계약만. 아니면 Domain |
+| Entity | `adaptor.out` | DB 매핑만 |
+
+한 DTO를 HTTP·Application·DB에 재사용하지 않음.
+
+## UUID·시간 (생성 위치)
+
+| 값 | 어디 |
+|----|------|
+| 업무 UUID | Application (또는 UuidGeneratorPort) → Domain factory |
+| 업무 시간 | Domain 또는 Application (`Instant` 등. String 금지) |
+| DB PK | Persistence Adapter / Entity |
+| `createdAt`/`updatedAt` | Persistence Auditing |
+
+Controller·Mapper에서 UUID·`now()` 생성 금지. DB PK를 외부 식별자로 쓰지 않음.
+
+## Mapper
+
+변환만. 금지: UUID/시간 생성, 상태·권한 결정, 정렬, Repository 호출, `block()`/`subscribe()`
+단순 Getter 복사만으로 Mapper 클래스를 관성적으로 만들지 않음.
+
+## Legacy
+
+신규·수정 범위부터 적용. Chat `port.dto`·기존 Mapper UUID/시간 생성은 요청 없이 일괄 변경 금지.
