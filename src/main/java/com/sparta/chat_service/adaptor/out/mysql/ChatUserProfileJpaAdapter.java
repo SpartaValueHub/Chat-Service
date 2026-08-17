@@ -6,6 +6,7 @@ import com.sparta.chat_service.adaptor.out.mysql.repository.ChatUserProfileJpaRe
 import com.sparta.chat_service.application.port.out.LoadChatUserProfilePort;
 import com.sparta.chat_service.application.port.out.SaveChatUserProfilePort;
 import com.sparta.chat_service.domain.model.ChatUserProfile;
+import com.sparta.chat_service.domain.model.MemberGrade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -35,7 +36,11 @@ public class ChatUserProfileJpaAdapter implements LoadChatUserProfilePort, SaveC
 	}
 
 	private ChatUserProfile updateExisting(ChatUserProfileEntity entity, ChatUserProfile profile) {
-		entity.update(profile.getNickname(), profile.getProfileImageUrl());
+		// Member 적재처럼 등급이 비면 기존 회원 등급을 유지한다
+		MemberGrade memberGrade = profile.getMemberGrade() != null
+				? profile.getMemberGrade()
+				: entity.getMemberGrade();
+		entity.update(profile.getNickname(), profile.getProfileImageUrl(), memberGrade);
 		return chatUserProfileJpaMapper.toDomain(entity);
 	}
 

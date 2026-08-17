@@ -13,6 +13,7 @@ public class ChatUserProfileJpaMapper {
 				.memberUuid(profile.getMemberUuid())
 				.nickname(profile.getNickname())
 				.profileImageUrl(profile.getProfileImageUrl())
+				.memberGrade(profile.getMemberGrade())
 				.updatedAt(profile.getUpdatedAt())
 				.build();
 	}
@@ -22,6 +23,7 @@ public class ChatUserProfileJpaMapper {
 				entity.getMemberUuid(),
 				entity.getNickname(),
 				entity.getProfileImageUrl(),
+				entity.getMemberGrade(),
 				entity.getUpdatedAt()
 		);
 	}

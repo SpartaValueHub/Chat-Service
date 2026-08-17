@@ -14,8 +14,8 @@ public class ChatRoom {
 
 	// MongoDB 문서 ID
 	private final String id;
-	// 연관 상품(리스팅) UUID
-	private final String listingUuid;
+	// 연관 상품 게시글 UUID
+	private final String productPostUuid;
 	// 참여자 목록
 	private final List<Participant> participants;
 	// 마지막 메시지 요약
@@ -30,7 +30,7 @@ public class ChatRoom {
 	@Builder
 	private ChatRoom(
 			String id,
-			String listingUuid,
+			String productPostUuid,
 			List<Participant> participants,
 			LastMessage lastMessage,
 			ChatRoomStatus status,
@@ -38,7 +38,7 @@ public class ChatRoom {
 			Instant updatedAt
 	) {
 		this.id = id;
-		this.listingUuid = listingUuid;
+		this.productPostUuid = productPostUuid;
 		this.participants = participants == null
 				? List.of()
 				: Collections.unmodifiableList(new ArrayList<>(participants));
@@ -48,10 +48,10 @@ public class ChatRoom {
 		this.updatedAt = updatedAt;
 	}
 
-	public static ChatRoom create(String listingUuid, List<Participant> participants) {
+	public static ChatRoom create(String productPostUuid, List<Participant> participants) {
 		Instant now = Instant.now();
 		return ChatRoom.builder()
-				.listingUuid(listingUuid)
+				.productPostUuid(productPostUuid)
 				.participants(participants)
 				.lastMessage(null)
 				.status(ChatRoomStatus.ACTIVE)
@@ -62,7 +62,7 @@ public class ChatRoom {
 
 	public static ChatRoom restore(
 			String id,
-			String listingUuid,
+			String productPostUuid,
 			List<Participant> participants,
 			LastMessage lastMessage,
 			ChatRoomStatus status,
@@ -71,7 +71,7 @@ public class ChatRoom {
 	) {
 		return ChatRoom.builder()
 				.id(id)
-				.listingUuid(listingUuid)
+				.productPostUuid(productPostUuid)
 				.participants(participants)
 				.lastMessage(lastMessage)
 				.status(status)
@@ -84,7 +84,7 @@ public class ChatRoom {
 	public ChatRoom updateLastMessage(LastMessage lastMessage) {
 		return ChatRoom.builder()
 				.id(this.id)
-				.listingUuid(this.listingUuid)
+				.productPostUuid(this.productPostUuid)
 				.participants(this.participants)
 				.lastMessage(lastMessage)
 				.status(this.status)

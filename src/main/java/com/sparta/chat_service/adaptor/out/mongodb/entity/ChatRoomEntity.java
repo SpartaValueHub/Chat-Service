@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -24,9 +25,10 @@ public class ChatRoomEntity {
 	@Id
 	private String id;
 
-	// 연관 상품(리스팅) UUID
-	@Field("listing_uuid")
-	private String listingUuid;
+	// 연관 상품 게시글 UUID
+	@Indexed
+	@Field("product_post_uuid")
+	private String productPostUuid;
 
 	// 참여자 목록
 	@Field("participants")
@@ -53,7 +55,7 @@ public class ChatRoomEntity {
 	@Builder
 	private ChatRoomEntity(
 			String id,
-			String listingUuid,
+			String productPostUuid,
 			List<ParticipantDocument> participants,
 			LastMessageDocument lastMessage,
 			String status,
@@ -61,7 +63,7 @@ public class ChatRoomEntity {
 			Instant updatedAt
 	) {
 		this.id = id;
-		this.listingUuid = listingUuid;
+		this.productPostUuid = productPostUuid;
 		this.participants = participants == null ? new ArrayList<>() : participants;
 		this.lastMessage = lastMessage;
 		this.status = status;

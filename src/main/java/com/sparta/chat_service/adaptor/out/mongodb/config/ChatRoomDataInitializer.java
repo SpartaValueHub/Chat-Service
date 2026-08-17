@@ -66,7 +66,7 @@ public class ChatRoomDataInitializer implements ApplicationRunner {
 
 					return reactiveMongoTemplate.save(ChatRoomEntity.builder()
 							.id(seedRoom.id())
-							.listingUuid(seedRoom.listingUuid())
+							.productPostUuid(seedRoom.productPostUuid())
 							.participants(participants)
 							.lastMessage(null)
 							.status(ChatRoomStatus.ACTIVE.name())
@@ -76,6 +76,6 @@ public class ChatRoomDataInitializer implements ApplicationRunner {
 				});
 	}
 
-	private record SeedRoom(String id, String listingUuid, List<String> memberUuids) {
+	private record SeedRoom(String id, String productPostUuid, List<String> memberUuids) {
 	}
 }

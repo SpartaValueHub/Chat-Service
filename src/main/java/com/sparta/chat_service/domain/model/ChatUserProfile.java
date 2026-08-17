@@ -15,6 +15,8 @@ public class ChatUserProfile {
 	private final String nickname;
 	// 프로필 이미지 URL
 	private final String profileImageUrl;
+	// 회원 등급 (판매자만 채워질 수 있음)
+	private final MemberGrade memberGrade;
 	// 프로필 수정 시각
 	private final LocalDateTime updatedAt;
 
@@ -23,19 +25,31 @@ public class ChatUserProfile {
 			String memberUuid,
 			String nickname,
 			String profileImageUrl,
+			MemberGrade memberGrade,
 			LocalDateTime updatedAt
 	) {
 		this.memberUuid = memberUuid;
 		this.nickname = nickname;
 		this.profileImageUrl = profileImageUrl;
+		this.memberGrade = memberGrade;
 		this.updatedAt = updatedAt;
 	}
 
 	public static ChatUserProfile create(String memberUuid, String nickname, String profileImageUrl) {
+		return create(memberUuid, nickname, profileImageUrl, null);
+	}
+
+	public static ChatUserProfile create(
+			String memberUuid,
+			String nickname,
+			String profileImageUrl,
+			MemberGrade memberGrade
+	) {
 		return ChatUserProfile.builder()
 				.memberUuid(memberUuid)
 				.nickname(nickname)
 				.profileImageUrl(profileImageUrl)
+				.memberGrade(memberGrade)
 				.updatedAt(LocalDateTime.now())
 				.build();
 	}
@@ -44,23 +58,36 @@ public class ChatUserProfile {
 			String memberUuid,
 			String nickname,
 			String profileImageUrl,
+			MemberGrade memberGrade,
 			LocalDateTime updatedAt
 	) {
 		return ChatUserProfile.builder()
 				.memberUuid(memberUuid)
 				.nickname(nickname)
 				.profileImageUrl(profileImageUrl)
+				.memberGrade(memberGrade)
 				.updatedAt(updatedAt)
 				.build();
 	}
 
-	// 닉네임·프로필 이미지 갱신
+	// 닉네임·프로필 이미지 갱신. 등급이 비면 기존 값을 유지한다
 	public ChatUserProfile update(String nickname, String profileImageUrl) {
+		return update(nickname, profileImageUrl, this.memberGrade);
+	}
+
+	// 닉네임·프로필 이미지·회원 등급 갱신
+	public ChatUserProfile update(String nickname, String profileImageUrl, MemberGrade memberGrade) {
 		return ChatUserProfile.builder()
 				.memberUuid(this.memberUuid)
 				.nickname(nickname)
 				.profileImageUrl(profileImageUrl)
+				.memberGrade(memberGrade != null ? memberGrade : this.memberGrade)
 				.updatedAt(LocalDateTime.now())
 				.build();
+	}
+
+	// 상품 게시글 상세에서 온 판매자 닉네임·등급만 반영. 프로필 이미지는 유지
+	public ChatUserProfile applySellerSnapshot(String nickname, MemberGrade memberGrade) {
+		return update(nickname, this.profileImageUrl, memberGrade);
 	}
 }
