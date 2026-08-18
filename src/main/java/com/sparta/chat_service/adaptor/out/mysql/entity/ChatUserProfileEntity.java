@@ -1,7 +1,10 @@
 package com.sparta.chat_service.adaptor.out.mysql.entity;
 
+import com.sparta.chat_service.domain.model.MemberGrade;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -31,6 +34,11 @@ public class ChatUserProfileEntity {
 	@Column(name = "profile_image_url", length = 500)
 	private String profileImageUrl;
 
+	// 회원 등급 (판매자만 채워질 수 있음)
+	@Enumerated(EnumType.STRING)
+	@Column(name = "member_grade", length = 20)
+	private MemberGrade memberGrade;
+
 	// 프로필 수정 시각
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
@@ -40,11 +48,13 @@ public class ChatUserProfileEntity {
 			String memberUuid,
 			String nickname,
 			String profileImageUrl,
+			MemberGrade memberGrade,
 			LocalDateTime updatedAt
 	) {
 		this.memberUuid = memberUuid;
 		this.nickname = nickname;
 		this.profileImageUrl = profileImageUrl;
+		this.memberGrade = memberGrade;
 		this.updatedAt = updatedAt;
 	}
 
@@ -57,10 +67,11 @@ public class ChatUserProfileEntity {
 				.build();
 	}
 
-	// 닉네임·프로필 이미지 갱신
-	public void update(String nickname, String profileImageUrl) {
+	// 닉네임·프로필 이미지·회원 등급 갱신
+	public void update(String nickname, String profileImageUrl, MemberGrade memberGrade) {
 		this.nickname = nickname;
 		this.profileImageUrl = profileImageUrl;
+		this.memberGrade = memberGrade;
 		this.updatedAt = LocalDateTime.now();
 	}
 }
