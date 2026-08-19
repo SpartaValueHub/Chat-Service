@@ -14,7 +14,7 @@ public class ChatProductPostJpaMapper {
 				.productPostImageUrl(productPost.getProductPostImageUrl())
 				.productPostName(productPost.getProductPostName())
 				.price(productPost.getPrice())
-				.saleStatus(productPost.getSaleStatus())
+				.tradeStatus(productPost.getTradeStatus())
 				.updatedAt(productPost.getUpdatedAt())
 				.build();
 	}
@@ -25,7 +25,7 @@ public class ChatProductPostJpaMapper {
 				entity.getProductPostImageUrl(),
 				entity.getProductPostName(),
 				entity.getPrice(),
-				entity.getSaleStatus(),
+				entity.getTradeStatus(),
 				entity.getUpdatedAt()
 		);
 	}

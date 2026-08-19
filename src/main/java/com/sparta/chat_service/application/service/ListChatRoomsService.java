@@ -1,0 +1,120 @@
+package com.sparta.chat_service.application.service;
+
+import com.sparta.chat_service.application.port.in.ListChatRoomsUseCase;
+import com.sparta.chat_service.application.port.in.dto.ChatRoomListCounterpartDto;
+import com.sparta.chat_service.application.port.in.dto.ChatRoomListItemDto;
+import com.sparta.chat_service.application.port.in.dto.ChatRoomListLastMessageDto;
+import com.sparta.chat_service.application.port.in.dto.ChatRoomListProductDto;
+import com.sparta.chat_service.application.port.in.dto.ChatRoomListResultDto;
+import com.sparta.chat_service.application.port.out.LoadChatProductPostPort;
+import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
+import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
+import com.sparta.chat_service.domain.model.ChatProductPost;
+import com.sparta.chat_service.domain.model.ChatRoom;
+import com.sparta.chat_service.domain.model.LastMessage;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class ListChatRoomsService implements ListChatRoomsUseCase {
+
+	// 6단계에서 lastRead 기반으로 채우기 전까지 목록 뱃지는 0
+	private static final int UNREAD_COUNT_PLACEHOLDER = 0;
+
+	private final LoadChatRoomPort loadChatRoomPort;
+	private final LoadChatProductPostPort loadChatProductPostPort;
+
+	@Override
+	public ChatRoomListResultDto list(String memberUuid) {
+		String viewerUuid = requireMemberUuid(memberUuid);
+		List<ChatRoom> rooms = sortForList(loadChatRoomPort.findByParticipant(viewerUuid));
+		Map<String, ChatProductPost> productPosts = loadProductPosts(rooms);
+		List<ChatRoomListItemDto> items = rooms.stream()
+				.map(room -> toItem(room, viewerUuid, productPosts))
+				.toList();
+		return ChatRoomListResultDto.builder()
+				.rooms(items)
+				.build();
+	}
+
+	private Map<String, ChatProductPost> loadProductPosts(List<ChatRoom> rooms) {
+		List<String> productPostUuids = rooms.stream()
+				.map(ChatRoom::getProductPostUuid)
+				.filter(uuid -> uuid != null && !uuid.isBlank())
+				.distinct()
+				.toList();
+		return loadChatProductPostPort.findAllByProductPostUuids(productPostUuids).stream()
+				.collect(Collectors.toMap(ChatProductPost::getProductPostUuid, Function.identity(), (left, right) -> left));
+	}
+
+	private ChatRoomListItemDto toItem(
+			ChatRoom room,
+			String viewerUuid,
+			Map<String, ChatProductPost> productPosts
+	) {
+		return ChatRoomListItemDto.builder()
+				.roomId(room.getId())
+				.productPost(toProduct(room.getProductPostUuid(), productPosts.get(room.getProductPostUuid())))
+				.counterpart(ChatRoomListCounterpartDto.builder()
+						.memberUuid(room.counterpartUuid(viewerUuid).orElse(null))
+						.build())
+				.lastMessage(toLastMessage(room.getLastMessage()))
+				.unreadCount(UNREAD_COUNT_PLACEHOLDER)
+				.updatedAt(room.getUpdatedAt())
+				.build();
+	}
+
+	private ChatRoomListProductDto toProduct(String productPostUuid, ChatProductPost productPost) {
+		if (productPost == null) {
+			return ChatRoomListProductDto.builder()
+					.productPostUuid(productPostUuid)
+					.build();
+		}
+		return ChatRoomListProductDto.builder()
+				.productPostUuid(productPost.getProductPostUuid())
+				.productPostImageUrl(productPost.getProductPostImageUrl())
+				.productPostName(productPost.getProductPostName())
+				.price(productPost.getPrice())
+				.tradeStatus(productPost.getTradeStatus())
+				.build();
+	}
+
+	private ChatRoomListLastMessageDto toLastMessage(LastMessage lastMessage) {
+		if (lastMessage == null) {
+			return null;
+		}
+		return ChatRoomListLastMessageDto.builder()
+				.content(lastMessage.getContent())
+				.createdAt(lastMessage.getCreatedAt())
+				.build();
+	}
+
+	private List<ChatRoom> sortForList(List<ChatRoom> rooms) {
+		return rooms.stream()
+				.sorted(Comparator
+						.comparing(this::lastMessageCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()))
+						.thenComparing(ChatRoom::getUpdatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+				.toList();
+	}
+
+	private Instant lastMessageCreatedAt(ChatRoom room) {
+		LastMessage lastMessage = room.getLastMessage();
+		return lastMessage == null ? null : lastMessage.getCreatedAt();
+	}
+
+	private String requireMemberUuid(String memberUuid) {
+		String normalized = memberUuid == null ? "" : memberUuid.trim();
+		if (normalized.isBlank()) {
+			throw new ChatAuthMissingException();
+		}
+		return normalized;
+	}
+}

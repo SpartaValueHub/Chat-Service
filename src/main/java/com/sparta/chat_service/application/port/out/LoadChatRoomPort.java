@@ -2,9 +2,10 @@ package com.sparta.chat_service.application.port.out;
 
 import com.sparta.chat_service.domain.model.ChatRoom;
 
+import java.util.List;
 import java.util.Optional;
 
-// 상품 게시글 + 참여자 쌍으로 채팅방 조회
+// 채팅방 조회
 public interface LoadChatRoomPort {
 
 	Optional<ChatRoom> findByProductPostAndMembers(
@@ -12,4 +13,6 @@ public interface LoadChatRoomPort {
 			String memberUuid1,
 			String memberUuid2
 	);
+
+	List<ChatRoom> findByParticipant(String memberUuid);
 }

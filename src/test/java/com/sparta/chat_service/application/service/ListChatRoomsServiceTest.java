@@ -1,0 +1,198 @@
+package com.sparta.chat_service.application.service;
+
+import com.sparta.chat_service.application.port.in.dto.ChatRoomListItemDto;
+import com.sparta.chat_service.application.port.in.dto.ChatRoomListResultDto;
+import com.sparta.chat_service.application.port.out.LoadChatProductPostPort;
+import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
+import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
+import com.sparta.chat_service.domain.model.ChatProductPost;
+import com.sparta.chat_service.domain.model.ChatRoom;
+import com.sparta.chat_service.domain.model.ChatRoomStatus;
+import com.sparta.chat_service.domain.model.LastMessage;
+import com.sparta.chat_service.domain.model.Participant;
+import com.sparta.chat_service.domain.model.TradeStatus;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class ListChatRoomsServiceTest {
+
+	private static final String VIEWER_UUID = "22222222-2222-4222-8222-222222222222";
+	private static final String SELLER_UUID = "33333333-3333-4333-8333-333333333333";
+	private static final String OTHER_SELLER_UUID = "55555555-5555-4555-8555-555555555555";
+	private static final String PRODUCT_POST_UUID = "11111111-1111-4111-8111-111111111111";
+	private static final String OTHER_PRODUCT_POST_UUID = "44444444-4444-4444-8444-444444444444";
+
+	private InMemoryChatRoomStore roomStore;
+	private InMemoryChatProductPostStore productPostStore;
+	private ListChatRoomsService service;
+
+	@BeforeEach
+	void setUp() {
+		roomStore = new InMemoryChatRoomStore();
+		productPostStore = new InMemoryChatProductPostStore();
+		service = new ListChatRoomsService(roomStore, productPostStore);
+	}
+
+	@Test
+	void list_rejectsMissingMemberHeader() {
+		assertThrows(ChatAuthMissingException.class, () -> service.list("  "));
+	}
+
+	@Test
+	void list_returnsEmptyRoomsWhenViewerHasNone() {
+		ChatRoomListResultDto result = service.list(VIEWER_UUID);
+
+		assertTrue(result.getRooms().isEmpty());
+	}
+
+	@Test
+	void list_combinesProductSnapshotAndCounterpartUuid() {
+		Instant updatedAt = Instant.parse("2026-08-19T04:00:00Z");
+		roomStore.add(room(
+				"room-1",
+				PRODUCT_POST_UUID,
+				VIEWER_UUID,
+				SELLER_UUID,
+				LastMessage.create("안녕하세요", updatedAt),
+				updatedAt
+		));
+		productPostStore.add(ChatProductPost.create(
+				PRODUCT_POST_UUID,
+				"https://cdn.example.com/products/111.png",
+				"중고 노트북",
+				350000L,
+				TradeStatus.SELLING
+		));
+
+		ChatRoomListItemDto item = service.list(VIEWER_UUID).getRooms().get(0);
+
+		assertEquals("room-1", item.getRoomId());
+		assertEquals("중고 노트북", item.getProductPost().getProductPostName());
+		assertEquals(350000L, item.getProductPost().getPrice());
+		assertEquals(SELLER_UUID, item.getCounterpart().getMemberUuid());
+		assertEquals("안녕하세요", item.getLastMessage().getContent());
+		assertEquals(0, item.getUnreadCount());
+	}
+
+	@Test
+	void list_keepsLastMessageNullAndUnreadZeroWhenRoomHasNoMessages() {
+		roomStore.add(room("room-1", PRODUCT_POST_UUID, VIEWER_UUID, SELLER_UUID, null, Instant.parse("2026-08-19T04:00:00Z")));
+
+		ChatRoomListItemDto item = service.list(VIEWER_UUID).getRooms().get(0);
+
+		assertNull(item.getLastMessage());
+		assertEquals(0, item.getUnreadCount());
+	}
+
+	@Test
+	void list_doesNotFailWhenProductIsMissing() {
+		roomStore.add(room("room-1", PRODUCT_POST_UUID, VIEWER_UUID, SELLER_UUID, null, Instant.parse("2026-08-19T04:00:00Z")));
+
+		ChatRoomListResultDto result = service.list(VIEWER_UUID);
+		ChatRoomListItemDto item = result.getRooms().get(0);
+
+		assertEquals(1, result.getRooms().size());
+		assertEquals(PRODUCT_POST_UUID, item.getProductPost().getProductPostUuid());
+		assertNull(item.getProductPost().getProductPostName());
+		assertEquals(SELLER_UUID, item.getCounterpart().getMemberUuid());
+	}
+
+	@Test
+	void list_sortsByLastMessageThenUpdatedAt() {
+		Instant older = Instant.parse("2026-08-19T01:00:00Z");
+		Instant newer = Instant.parse("2026-08-19T03:00:00Z");
+		Instant latestUpdate = Instant.parse("2026-08-19T04:00:00Z");
+		roomStore.add(room("room-old", PRODUCT_POST_UUID, VIEWER_UUID, SELLER_UUID, LastMessage.create("이전", older), older));
+		roomStore.add(room(
+				"room-no-message",
+				OTHER_PRODUCT_POST_UUID,
+				VIEWER_UUID,
+				OTHER_SELLER_UUID,
+				null,
+				latestUpdate
+		));
+		roomStore.add(room("room-new", PRODUCT_POST_UUID, VIEWER_UUID, SELLER_UUID, LastMessage.create("최근", newer), newer));
+
+		List<ChatRoomListItemDto> rooms = service.list(VIEWER_UUID).getRooms();
+
+		assertEquals("room-new", rooms.get(0).getRoomId());
+		assertEquals("room-old", rooms.get(1).getRoomId());
+		assertEquals("room-no-message", rooms.get(2).getRoomId());
+	}
+
+	private ChatRoom room(
+			String id,
+			String productPostUuid,
+			String memberUuid1,
+			String memberUuid2,
+			LastMessage lastMessage,
+			Instant updatedAt
+	) {
+		Instant joinedAt = Instant.parse("2026-08-01T00:00:00Z");
+		return ChatRoom.restore(
+				id,
+				productPostUuid,
+				List.of(Participant.join(memberUuid1, joinedAt), Participant.join(memberUuid2, joinedAt)),
+				lastMessage,
+				ChatRoomStatus.ACTIVE,
+				joinedAt,
+				updatedAt
+		);
+	}
+
+	private static final class InMemoryChatRoomStore implements LoadChatRoomPort {
+
+		private final List<ChatRoom> rooms = new ArrayList<>();
+
+		void add(ChatRoom room) {
+			rooms.add(room);
+		}
+
+		@Override
+		public Optional<ChatRoom> findByProductPostAndMembers(
+				String productPostUuid,
+				String memberUuid1,
+				String memberUuid2
+		) {
+			return Optional.empty();
+		}
+
+		@Override
+		public List<ChatRoom> findByParticipant(String memberUuid) {
+			return rooms.stream()
+					.filter(room -> room.getParticipants().stream()
+							.anyMatch(participant -> memberUuid.equals(participant.getMemberUuid())))
+					.toList();
+		}
+	}
+
+	private static final class InMemoryChatProductPostStore implements LoadChatProductPostPort {
+
+		private final Map<String, ChatProductPost> posts = new HashMap<>();
+
+		void add(ChatProductPost productPost) {
+			posts.put(productPost.getProductPostUuid(), productPost);
+		}
+
+		@Override
+		public List<ChatProductPost> findAllByProductPostUuids(Collection<String> productPostUuids) {
+			return productPostUuids.stream()
+					.map(posts::get)
+					.filter(post -> post != null)
+					.toList();
+		}
+	}
+}

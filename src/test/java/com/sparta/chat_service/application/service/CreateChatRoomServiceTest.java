@@ -14,10 +14,12 @@ import com.sparta.chat_service.domain.model.ChatProductPost;
 import com.sparta.chat_service.domain.model.ChatRoom;
 import com.sparta.chat_service.domain.model.ChatUserProfile;
 import com.sparta.chat_service.domain.model.MemberGrade;
+import com.sparta.chat_service.domain.model.TradeStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -68,7 +70,7 @@ class CreateChatRoomServiceTest {
 		ChatProductPost productPost = productPostStore.posts.get(PRODUCT_POST_UUID);
 		assertEquals("중고 노트북", productPost.getProductPostName());
 		assertEquals(350000L, productPost.getPrice());
-		assertEquals("ON_SALE", productPost.getSaleStatus());
+		assertEquals(TradeStatus.SELLING, productPost.getTradeStatus());
 
 		ChatUserProfile seller = profileStore.profiles.get(SELLER_UUID);
 		assertEquals("판매자닉", seller.getNickname());
@@ -128,7 +130,7 @@ class CreateChatRoomServiceTest {
 				.productPostImageUrl("https://cdn.example.com/products/111.png")
 				.productPostName("중고 노트북")
 				.price(null)
-				.saleStatus("ON_SALE")
+				.tradeStatus(TradeStatus.SELLING)
 				.sellerNickname("판매자닉")
 				.sellerMemberGrade(MemberGrade.GOLD)
 				.build();
@@ -144,7 +146,7 @@ class CreateChatRoomServiceTest {
 				.productPostImageUrl("https://cdn.example.com/products/111.png")
 				.productPostName("중고 노트북")
 				.price(350000L)
-				.saleStatus("ON_SALE")
+				.tradeStatus(TradeStatus.SELLING)
 				.sellerNickname("판매자닉")
 				.sellerMemberGrade(MemberGrade.GOLD)
 				.build();
@@ -168,6 +170,13 @@ class CreateChatRoomServiceTest {
 					.filter(room -> room.getParticipants().size() == 2)
 					.filter(room -> hasMember(room, memberUuid1) && hasMember(room, memberUuid2))
 					.findFirst();
+		}
+
+		@Override
+		public List<ChatRoom> findByParticipant(String memberUuid) {
+			return rooms.values().stream()
+					.filter(room -> hasMember(room, memberUuid))
+					.toList();
 		}
 
 		@Override

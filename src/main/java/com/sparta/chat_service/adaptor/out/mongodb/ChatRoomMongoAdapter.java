@@ -44,6 +44,20 @@ public class ChatRoomMongoAdapter implements LoadChatRoomPort, SaveChatRoomPort 
 	}
 
 	@Override
+	public List<ChatRoom> findByParticipant(String memberUuid) {
+		Query query = Query.query(Criteria.where("participants.member_uuid").is(memberUuid));
+		List<ChatRoomEntity> entities = reactiveMongoTemplate.find(query, ChatRoomEntity.class)
+				.collectList()
+				.block(MONGO_TIMEOUT);
+		if (entities == null || entities.isEmpty()) {
+			return List.of();
+		}
+		return entities.stream()
+				.map(chatMongoMapper::toDomain)
+				.toList();
+	}
+
+	@Override
 	public ChatRoom save(ChatRoom chatRoom) {
 		ChatRoomEntity saved = reactiveMongoTemplate.save(chatMongoMapper.toEntity(chatRoom))
 				.block(MONGO_TIMEOUT);
