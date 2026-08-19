@@ -16,6 +16,7 @@ import com.sparta.chat_service.domain.model.ChatRoom;
 import com.sparta.chat_service.domain.model.ChatUserProfile;
 import com.sparta.chat_service.domain.model.MemberGrade;
 import com.sparta.chat_service.domain.model.Participant;
+import com.sparta.chat_service.domain.model.TradeStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,7 +52,7 @@ public class CreateChatRoomService implements CreateChatRoomUseCase {
 		String productPostImageUrl = requireText(command.getProductPostImageUrl(), "productPostImageUrl은 필수입니다.");
 		String productPostName = requireText(command.getProductPostName(), "productPostName은 필수입니다.");
 		Long price = requirePrice(command.getPrice());
-		String saleStatus = requireText(command.getSaleStatus(), "saleStatus는 필수입니다.");
+		TradeStatus tradeStatus = requireTradeStatus(command.getTradeStatus());
 		String sellerNickname = requireText(command.getSellerNickname(), "sellerNickname은 필수입니다.");
 		MemberGrade sellerMemberGrade = requireMemberGrade(command.getSellerMemberGrade());
 
@@ -67,7 +68,7 @@ public class CreateChatRoomService implements CreateChatRoomUseCase {
 				productPostImageUrl,
 				productPostName,
 				price,
-				saleStatus
+				tradeStatus
 		));
 
 		return loadChatRoomPort.findByProductPostAndMembers(productPostUuid, buyerUuid, sellerUuid)
@@ -123,6 +124,13 @@ public class CreateChatRoomService implements CreateChatRoomUseCase {
 			throw new InvalidChatRoomRequestException("price는 필수입니다.");
 		}
 		return price;
+	}
+
+	private TradeStatus requireTradeStatus(TradeStatus tradeStatus) {
+		if (tradeStatus == null) {
+			throw new InvalidChatRoomRequestException("tradeStatus는 필수입니다.");
+		}
+		return tradeStatus;
 	}
 
 	private MemberGrade requireMemberGrade(MemberGrade memberGrade) {

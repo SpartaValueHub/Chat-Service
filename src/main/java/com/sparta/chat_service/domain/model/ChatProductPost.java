@@ -17,8 +17,8 @@ public class ChatProductPost {
 	private final String productPostName;
 	// 가격
 	private final Long price;
-	// 판매 상태
-	private final String saleStatus;
+	// 거래 상태
+	private final TradeStatus tradeStatus;
 	// 스냅샷 수정 시각
 	private final LocalDateTime updatedAt;
 
@@ -28,14 +28,14 @@ public class ChatProductPost {
 			String productPostImageUrl,
 			String productPostName,
 			Long price,
-			String saleStatus,
+			TradeStatus tradeStatus,
 			LocalDateTime updatedAt
 	) {
 		this.productPostUuid = productPostUuid;
 		this.productPostImageUrl = productPostImageUrl;
 		this.productPostName = productPostName;
 		this.price = price;
-		this.saleStatus = saleStatus;
+		this.tradeStatus = tradeStatus;
 		this.updatedAt = updatedAt;
 	}
 
@@ -44,14 +44,14 @@ public class ChatProductPost {
 			String productPostImageUrl,
 			String productPostName,
 			Long price,
-			String saleStatus
+			TradeStatus tradeStatus
 	) {
 		return ChatProductPost.builder()
 				.productPostUuid(productPostUuid)
 				.productPostImageUrl(productPostImageUrl)
 				.productPostName(productPostName)
 				.price(price)
-				.saleStatus(saleStatus)
+				.tradeStatus(tradeStatus)
 				.updatedAt(LocalDateTime.now())
 				.build();
 	}
@@ -61,7 +61,7 @@ public class ChatProductPost {
 			String productPostImageUrl,
 			String productPostName,
 			Long price,
-			String saleStatus,
+			TradeStatus tradeStatus,
 			LocalDateTime updatedAt
 	) {
 		return ChatProductPost.builder()
@@ -69,7 +69,7 @@ public class ChatProductPost {
 				.productPostImageUrl(productPostImageUrl)
 				.productPostName(productPostName)
 				.price(price)
-				.saleStatus(saleStatus)
+				.tradeStatus(tradeStatus)
 				.updatedAt(updatedAt)
 				.build();
 	}
@@ -79,14 +79,14 @@ public class ChatProductPost {
 			String productPostImageUrl,
 			String productPostName,
 			Long price,
-			String saleStatus
+			TradeStatus tradeStatus
 	) {
 		return ChatProductPost.builder()
 				.productPostUuid(this.productPostUuid)
 				.productPostImageUrl(productPostImageUrl)
 				.productPostName(productPostName)
 				.price(price)
-				.saleStatus(saleStatus)
+				.tradeStatus(tradeStatus)
 				.updatedAt(LocalDateTime.now())
 				.build();
 	}

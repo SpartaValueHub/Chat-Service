@@ -1,6 +1,7 @@
 package com.sparta.chat_service.application.port.in.dto;
 
 import com.sparta.chat_service.domain.model.MemberGrade;
+import com.sparta.chat_service.domain.model.TradeStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -21,8 +22,8 @@ public class CreateChatRoomCommandDto {
 	private final String productPostName;
 	// 가격
 	private final Long price;
-	// 판매 상태
-	private final String saleStatus;
+	// 거래 상태
+	private final TradeStatus tradeStatus;
 	// 판매자 닉네임
 	private final String sellerNickname;
 	// 판매자 회원 등급

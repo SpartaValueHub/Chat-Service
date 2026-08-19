@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 // 채팅방 도메인
 @Getter
@@ -78,6 +79,17 @@ public class ChatRoom {
 				.createdAt(createdAt)
 				.updatedAt(updatedAt)
 				.build();
+	}
+
+	// 1:1 방에서 나 이외 참여자 UUID
+	public Optional<String> counterpartUuid(String memberUuid) {
+		if (memberUuid == null || memberUuid.isBlank()) {
+			return Optional.empty();
+		}
+		return participants.stream()
+				.map(Participant::getMemberUuid)
+				.filter(participantUuid -> !memberUuid.equals(participantUuid))
+				.findFirst();
 	}
 
 	// 마지막 메시지 요약 갱신
