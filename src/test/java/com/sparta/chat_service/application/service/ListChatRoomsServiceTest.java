@@ -2,13 +2,16 @@ package com.sparta.chat_service.application.service;
 
 import com.sparta.chat_service.application.port.in.dto.ChatRoomListItemDto;
 import com.sparta.chat_service.application.port.in.dto.ChatRoomListResultDto;
+import com.sparta.chat_service.application.port.out.LoadChatMessagePort;
 import com.sparta.chat_service.application.port.out.LoadChatProductPostPort;
 import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
 import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
+import com.sparta.chat_service.domain.model.ChatMessage;
 import com.sparta.chat_service.domain.model.ChatProductPost;
 import com.sparta.chat_service.domain.model.ChatRoom;
 import com.sparta.chat_service.domain.model.ChatRoomStatus;
 import com.sparta.chat_service.domain.model.LastMessage;
+import com.sparta.chat_service.domain.model.MessageType;
 import com.sparta.chat_service.domain.model.Participant;
 import com.sparta.chat_service.domain.model.TradeStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,13 +40,15 @@ class ListChatRoomsServiceTest {
 
 	private InMemoryChatRoomStore roomStore;
 	private InMemoryChatProductPostStore productPostStore;
+	private InMemoryChatMessageStore messageStore;
 	private ListChatRoomsService service;
 
 	@BeforeEach
 	void setUp() {
 		roomStore = new InMemoryChatRoomStore();
 		productPostStore = new InMemoryChatProductPostStore();
-		service = new ListChatRoomsService(roomStore, productPostStore);
+		messageStore = new InMemoryChatMessageStore();
+		service = new ListChatRoomsService(roomStore, productPostStore, messageStore);
 	}
 
 	@Test
@@ -133,6 +138,27 @@ class ListChatRoomsServiceTest {
 		assertEquals("room-no-message", rooms.get(2).getRoomId());
 	}
 
+	@Test
+	void list_countsUnreadAfterLastReadExcludingOwnMessages() {
+		Instant first = Instant.parse("2026-08-19T01:00:00Z");
+		Instant second = Instant.parse("2026-08-19T02:00:00Z");
+		Instant own = Instant.parse("2026-08-19T03:00:00Z");
+		roomStore.add(room(
+				"room-1",
+				PRODUCT_POST_UUID,
+				VIEWER_UUID,
+				SELLER_UUID,
+				LastMessage.create("내 말", own),
+				own,
+				first
+		));
+		messageStore.add(ChatMessage.restore("m1", "room-1", SELLER_UUID, MessageType.TEXT, "하나", null, first));
+		messageStore.add(ChatMessage.restore("m2", "room-1", SELLER_UUID, MessageType.TEXT, "둘", null, second));
+		messageStore.add(ChatMessage.restore("m3", "room-1", VIEWER_UUID, MessageType.TEXT, "내 말", null, own));
+
+		assertEquals(1, service.list(VIEWER_UUID).getRooms().get(0).getUnreadCount());
+	}
+
 	private ChatRoom room(
 			String id,
 			String productPostUuid,
@@ -141,12 +167,27 @@ class ListChatRoomsServiceTest {
 			LastMessage lastMessage,
 			Instant updatedAt
 	) {
+		return room(id, productPostUuid, memberUuid1, memberUuid2, lastMessage, updatedAt, null);
+	}
+
+	private ChatRoom room(
+			String id,
+			String productPostUuid,
+			String memberUuid1,
+			String memberUuid2,
+			LastMessage lastMessage,
+			Instant updatedAt,
+			Instant viewerLastReadAt
+	) {
 		Instant joinedAt = Instant.parse("2026-08-01T00:00:00Z");
 		return ChatRoom.restore(
 				id,
 				productPostUuid,
 				memberUuid2,
-				List.of(Participant.join(memberUuid1, joinedAt), Participant.join(memberUuid2, joinedAt)),
+				List.of(
+						Participant.restore(memberUuid1, true, joinedAt, viewerLastReadAt),
+						Participant.join(memberUuid2, joinedAt)
+				),
 				lastMessage,
 				ChatRoomStatus.ACTIVE,
 				joinedAt,
@@ -206,6 +247,39 @@ class ListChatRoomsServiceTest {
 		@Override
 		public Optional<ChatProductPost> findByProductPostUuid(String productPostUuid) {
 			return Optional.ofNullable(posts.get(productPostUuid));
+		}
+	}
+
+	private static final class InMemoryChatMessageStore implements LoadChatMessagePort {
+
+		private final Map<String, ChatMessage> messages = new HashMap<>();
+
+		void add(ChatMessage message) {
+			messages.put(message.getId(), message);
+		}
+
+		@Override
+		public Optional<ChatMessage> findById(String messageId) {
+			return Optional.ofNullable(messages.get(messageId));
+		}
+
+		@Override
+		public List<ChatMessage> findLatestByRoomId(String roomId, int limit) {
+			return List.of();
+		}
+
+		@Override
+		public List<ChatMessage> findByRoomIdBefore(String roomId, ChatMessage cursor, int limit) {
+			return List.of();
+		}
+
+		@Override
+		public int countUnread(String roomId, String viewerUuid, Instant lastReadAt) {
+			return (int) messages.values().stream()
+					.filter(message -> roomId.equals(message.getRoomId()))
+					.filter(message -> !viewerUuid.equals(message.getSenderUuid()))
+					.filter(message -> lastReadAt == null || message.getCreatedAt().isAfter(lastReadAt))
+					.count();
 		}
 	}
 }

@@ -3,10 +3,13 @@ package com.sparta.chat_service.application.service;
 import com.sparta.chat_service.application.port.in.dto.ChatMessageItemDto;
 import com.sparta.chat_service.application.port.in.dto.ChatMessageMetadataDto;
 import com.sparta.chat_service.application.port.in.dto.SendChatMessageCommandDto;
+import com.sparta.chat_service.application.port.out.ChatRoomPresencePort;
+import com.sparta.chat_service.application.port.out.LoadChatMessagePort;
 import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
 import com.sparta.chat_service.application.port.out.PublishChatListPreviewPort;
 import com.sparta.chat_service.application.port.out.SaveChatMessagePort;
 import com.sparta.chat_service.application.port.out.UpdateChatRoomLastMessagePort;
+import com.sparta.chat_service.application.port.out.UpdateParticipantLastReadPort;
 import com.sparta.chat_service.application.port.out.dto.ChatListPreviewDto;
 import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
 import com.sparta.chat_service.domain.exception.ChatRoomAccessDeniedException;
@@ -24,9 +27,11 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,6 +48,7 @@ class SendChatMessageServiceTest {
 
 	private InMemoryChatRoomStore roomStore;
 	private InMemoryChatMessageStore messageStore;
+	private StubChatRoomPresence presence;
 	private RecordingChatListPublisher listPublisher;
 	private SendChatMessageService service;
 
@@ -50,8 +56,17 @@ class SendChatMessageServiceTest {
 	void setUp() {
 		roomStore = new InMemoryChatRoomStore();
 		messageStore = new InMemoryChatMessageStore();
+		presence = new StubChatRoomPresence();
 		listPublisher = new RecordingChatListPublisher();
-		service = new SendChatMessageService(roomStore, messageStore, roomStore, listPublisher);
+		service = new SendChatMessageService(
+				roomStore,
+				messageStore,
+				roomStore,
+				roomStore,
+				presence,
+				messageStore,
+				listPublisher
+		);
 		roomStore.add(room());
 	}
 
@@ -85,7 +100,7 @@ class SendChatMessageServiceTest {
 	}
 
 	@Test
-	void send_savesTextAndUpdatesLastMessage() {
+	void send_savesTextAndPushesUnreadToOfflineCounterpart() {
 		ChatMessageItemDto result = service.send(command(SENDER_UUID, "안녕하세요", MessageType.TEXT, null));
 
 		assertEquals("msg-1", result.getMessageId());
@@ -95,11 +110,24 @@ class SendChatMessageServiceTest {
 		assertNull(result.getMetadata());
 		assertEquals(1, messageStore.messages.size());
 		assertEquals("안녕하세요", roomStore.lastMessage.getContent());
-		assertEquals(1, listPublisher.published.size());
-		assertEquals(List.of(SENDER_UUID, SELLER_UUID), listPublisher.published.get(0).memberUuids);
-		assertEquals("안녕하세요", listPublisher.published.get(0).preview.getLastMessage().getContent());
-		assertEquals(0, listPublisher.published.get(0).preview.getUnreadCount());
-		assertEquals(ROOM_ID, listPublisher.published.get(0).preview.getRoomId());
+		assertEquals(2, listPublisher.published.size());
+		assertEquals(0, listPublisher.unreadCount(SENDER_UUID));
+		assertEquals(1, listPublisher.unreadCount(SELLER_UUID));
+		assertEquals("안녕하세요", listPublisher.preview(SENDER_UUID).getLastMessage().getContent());
+		assertEquals(ROOM_ID, listPublisher.preview(SENDER_UUID).getRoomId());
+		assertEquals(result.getCreatedAt(), roomStore.lastReadAt(ROOM_ID, SENDER_UUID));
+		assertNull(roomStore.lastReadAt(ROOM_ID, SELLER_UUID));
+	}
+
+	@Test
+	void send_marksCounterpartReadWhenViewingRoom() {
+		presence.view(SELLER_UUID, ROOM_ID);
+
+		service.send(command(SENDER_UUID, "안녕하세요", MessageType.TEXT, null));
+
+		assertEquals(0, listPublisher.unreadCount(SENDER_UUID));
+		assertEquals(0, listPublisher.unreadCount(SELLER_UUID));
+		assertEquals(roomStore.lastReadAt(ROOM_ID, SENDER_UUID), roomStore.lastReadAt(ROOM_ID, SELLER_UUID));
 	}
 
 	@Test
@@ -121,7 +149,7 @@ class SendChatMessageServiceTest {
 		assertEquals("https://cdn.example.com/chat/bag.png", result.getContent());
 		assertEquals("2.4MB", result.getMetadata().getFileSize());
 		assertEquals("사진", roomStore.lastMessage.getContent());
-		assertEquals("사진", listPublisher.published.get(0).preview.getLastMessage().getContent());
+		assertEquals("사진", listPublisher.preview(SENDER_UUID).getLastMessage().getContent());
 	}
 
 	@Test
@@ -160,13 +188,19 @@ class SendChatMessageServiceTest {
 		);
 	}
 
-	private static final class InMemoryChatRoomStore implements LoadChatRoomPort, UpdateChatRoomLastMessagePort {
+	private static final class InMemoryChatRoomStore implements LoadChatRoomPort, UpdateChatRoomLastMessagePort,
+			UpdateParticipantLastReadPort {
 
 		private final Map<String, ChatRoom> rooms = new HashMap<>();
+		private final Map<String, Instant> lastReads = new HashMap<>();
 		private LastMessage lastMessage;
 
 		void add(ChatRoom room) {
 			rooms.put(room.getId(), room);
+		}
+
+		Instant lastReadAt(String roomId, String memberUuid) {
+			return lastReads.get(roomId + "|" + memberUuid);
 		}
 
 		@Override
@@ -192,9 +226,14 @@ class SendChatMessageServiceTest {
 		public void updateLastMessage(String roomId, LastMessage lastMessage) {
 			this.lastMessage = lastMessage;
 		}
+
+		@Override
+		public void updateLastRead(String roomId, String memberUuid, Instant lastReadAt) {
+			lastReads.put(roomId + "|" + memberUuid, lastReadAt);
+		}
 	}
 
-	private static final class InMemoryChatMessageStore implements SaveChatMessagePort {
+	private static final class InMemoryChatMessageStore implements SaveChatMessagePort, LoadChatMessagePort {
 
 		private final Map<String, ChatMessage> messages = new HashMap<>();
 		private final AtomicInteger saveCount = new AtomicInteger();
@@ -214,6 +253,44 @@ class SendChatMessageServiceTest {
 			messages.put(id, stored);
 			return stored;
 		}
+
+		@Override
+		public Optional<ChatMessage> findById(String messageId) {
+			return Optional.ofNullable(messages.get(messageId));
+		}
+
+		@Override
+		public List<ChatMessage> findLatestByRoomId(String roomId, int limit) {
+			return List.of();
+		}
+
+		@Override
+		public List<ChatMessage> findByRoomIdBefore(String roomId, ChatMessage cursor, int limit) {
+			return List.of();
+		}
+
+		@Override
+		public int countUnread(String roomId, String viewerUuid, Instant lastReadAt) {
+			return (int) messages.values().stream()
+					.filter(message -> roomId.equals(message.getRoomId()))
+					.filter(message -> !viewerUuid.equals(message.getSenderUuid()))
+					.filter(message -> lastReadAt == null || message.getCreatedAt().isAfter(lastReadAt))
+					.count();
+		}
+	}
+
+	private static final class StubChatRoomPresence implements ChatRoomPresencePort {
+
+		private final Set<String> viewing = new HashSet<>();
+
+		void view(String memberUuid, String roomId) {
+			viewing.add(memberUuid + "|" + roomId);
+		}
+
+		@Override
+		public boolean isViewing(String memberUuid, String roomId) {
+			return viewing.contains(memberUuid + "|" + roomId);
+		}
 	}
 
 	private static final class RecordingChatListPublisher implements PublishChatListPreviewPort {
@@ -221,16 +298,28 @@ class SendChatMessageServiceTest {
 		private final List<Published> published = new ArrayList<>();
 
 		@Override
-		public void publish(List<String> memberUuids, ChatListPreviewDto preview) {
-			published.add(new Published(List.copyOf(memberUuids), preview));
+		public void publish(String memberUuid, ChatListPreviewDto preview) {
+			published.add(new Published(memberUuid, preview));
+		}
+
+		ChatListPreviewDto preview(String memberUuid) {
+			return published.stream()
+					.filter(item -> memberUuid.equals(item.memberUuid))
+					.map(item -> item.preview)
+					.findFirst()
+					.orElseThrow();
+		}
+
+		int unreadCount(String memberUuid) {
+			return preview(memberUuid).getUnreadCount();
 		}
 
 		private static final class Published {
-			private final List<String> memberUuids;
+			private final String memberUuid;
 			private final ChatListPreviewDto preview;
 
-			private Published(List<String> memberUuids, ChatListPreviewDto preview) {
-				this.memberUuids = memberUuids;
+			private Published(String memberUuid, ChatListPreviewDto preview) {
+				this.memberUuid = memberUuid;
 				this.preview = preview;
 			}
 		}

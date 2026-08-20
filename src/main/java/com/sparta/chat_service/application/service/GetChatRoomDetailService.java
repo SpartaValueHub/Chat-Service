@@ -6,19 +6,27 @@ import com.sparta.chat_service.application.port.in.dto.ChatRoomDetailCounterpart
 import com.sparta.chat_service.application.port.in.dto.ChatRoomDetailProductDto;
 import com.sparta.chat_service.application.port.in.dto.ChatRoomDetailResultDto;
 import com.sparta.chat_service.application.port.in.dto.ChatRoomDetailSellerDto;
+import com.sparta.chat_service.application.port.out.LoadChatMessagePort;
 import com.sparta.chat_service.application.port.out.LoadChatProductPostPort;
 import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
+import com.sparta.chat_service.application.port.out.PublishChatListPreviewPort;
+import com.sparta.chat_service.application.port.out.UpdateParticipantLastReadPort;
+import com.sparta.chat_service.application.port.out.dto.ChatListPreviewDto;
 import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
 import com.sparta.chat_service.domain.exception.ChatRoomAccessDeniedException;
 import com.sparta.chat_service.domain.exception.ChatRoomNotFoundException;
 import com.sparta.chat_service.domain.exception.InvalidChatRoomRequestException;
+import com.sparta.chat_service.domain.model.ChatMessage;
 import com.sparta.chat_service.domain.model.ChatProductPost;
 import com.sparta.chat_service.domain.model.ChatRoom;
 import com.sparta.chat_service.domain.model.ChatUserProfile;
+import com.sparta.chat_service.domain.model.LastMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -27,18 +35,51 @@ public class GetChatRoomDetailService implements GetChatRoomDetailUseCase {
 
 	private final LoadChatRoomPort loadChatRoomPort;
 	private final LoadChatProductPostPort loadChatProductPostPort;
+	private final LoadChatMessagePort loadChatMessagePort;
+	private final UpdateParticipantLastReadPort updateParticipantLastReadPort;
+	private final PublishChatListPreviewPort publishChatListPreviewPort;
 	private final ResolveChatUserProfileUseCase resolveChatUserProfileUseCase;
 
 	@Override
 	public ChatRoomDetailResultDto get(String memberUuid, String roomId) {
 		String viewerUuid = requireMemberUuid(memberUuid);
 		ChatRoom room = requireAccessibleRoom(viewerUuid, roomId);
+		markRead(room, viewerUuid);
 		Map<String, ChatUserProfile> resolvedProfiles = new HashMap<>();
 		return ChatRoomDetailResultDto.builder()
 				.roomId(room.getId())
 				.productPost(toProduct(room.getProductPostUuid()))
 				.seller(toSeller(room.getSellerUuid(), resolvedProfiles))
 				.counterpart(toCounterpart(room.counterpartUuid(viewerUuid).orElse(null), resolvedProfiles))
+				.build();
+	}
+
+	private void markRead(ChatRoom room, String viewerUuid) {
+		Instant lastReadAt = latestMessageCreatedAt(room.getId());
+		updateParticipantLastReadPort.updateLastRead(room.getId(), viewerUuid, lastReadAt);
+		publishChatListPreviewPort.publish(viewerUuid, ChatListPreviewDto.builder()
+				.roomId(room.getId())
+				.lastMessage(toListLastMessage(room.getLastMessage()))
+				.unreadCount(0)
+				.updatedAt(room.getUpdatedAt())
+				.build());
+	}
+
+	private Instant latestMessageCreatedAt(String roomId) {
+		List<ChatMessage> latest = loadChatMessagePort.findLatestByRoomId(roomId, 1);
+		if (latest.isEmpty()) {
+			return Instant.now();
+		}
+		return latest.get(latest.size() - 1).getCreatedAt();
+	}
+
+	private ChatListPreviewDto.LastMessage toListLastMessage(LastMessage lastMessage) {
+		if (lastMessage == null) {
+			return null;
+		}
+		return ChatListPreviewDto.LastMessage.builder()
+				.content(lastMessage.getContent())
+				.createdAt(lastMessage.getCreatedAt())
 				.build();
 	}
 

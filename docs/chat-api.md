@@ -90,7 +90,9 @@ Body
 
 ### Summary
 
-로그인한 회원이 참여한 1:1 채팅방을 한 번에 반환합니다. 상품 정보는 Read Model을 조합하고, `lastMessage`는 채팅방 문서 값입니다. 상대는 UUID만 포함합니다. 미읽음 수는 이 단계에서 항상 0입니다.
+로그인한 회원이 참여한 1:1 채팅방을 한 번에 반환합니다. 상품 정보는 Read Model을 조합하고, `lastMessage`는 채팅방 문서 값입니다. 상대는 UUID만 포함합니다.
+
+`unreadCount`는 내 `lastRead` 이후에 상대가 보낸 메시지 개수입니다. 내가 보낸 말은 포함하지 않습니다. 방에 한 번도 안 들어갔으면 `lastRead`가 없어 상대 말 전체가 미읽음입니다.
 
 ### Method · Path
 
@@ -152,7 +154,7 @@ Query·Body 없음. 페이징 없음.
         "content": "안녕하세요",
         "createdAt": "2026-08-19T04:00:00Z"
       },
-      "unreadCount": 0,
+      "unreadCount": 2,
       "updatedAt": "2026-08-19T04:00:00Z"
     }
   ]
@@ -172,6 +174,8 @@ Query·Body 없음. 페이징 없음.
 ### Summary
 
 입장 시 방 상단과 말풍선용 상대 프로필을 그립니다. 상품 스냅샷과 **물건을 올린 판매자** 닉네임, 그리고 **대화 상대** 닉네임·프로필 이미지를 반환합니다. 판매자 회원 등급은 포함하지 않습니다. 지난 메시지는 이력 API를 사용합니다.
+
+이 GET이 그 사람 읽음 처리입니다. 참여자 칸의 `last_read_at`을 최신 메시지 시각으로 올리고, 목록 큐 `/user/queue/chat-list`로 그 방 `unreadCount` 0을 푸시합니다. `lastRead` 자체는 응답에 넣지 않습니다. 전용 read API는 없습니다.
 
 `productPostUuid`는 이미지·제목·가격 클릭 시 상품 상세로 돌아가기 위한 식별자입니다.  
 말풍선 왼쪽의 닉네임·사진은 `counterpart`입니다. 메시지마다 Member를 호출하지 않습니다.
@@ -363,7 +367,9 @@ Query
 
 ### Summary
 
-상세 화면에서 말을 보내면 **먼저 Mongo에 저장**한 뒤, 그 방 topic 구독자에게 말풍선을 뿌립니다. 같은 저장 직후, 참여자 개인 큐로 목록 한 줄 미리보기도 푸시합니다. 상대가 구독하지 않아도 저장됩니다. 다시 들어오면 이력 REST로 보입니다.
+상세 화면에서 말을 보내면 **먼저 Mongo에 저장**한 뒤, 그 방 topic 구독자에게 말풍선을 뿌립니다. 같은 저장 직후, 참여자 개인 큐로 목록 한 줄 미리보기(`lastMessage` + 그 사람 `unreadCount`)도 푸시합니다. 상대가 구독하지 않아도 저장됩니다. 다시 들어오면 이력 REST로 보입니다.
+
+보낸 사람은 항상 읽음입니다. 상대가 `/topic/chat.{roomId}`를 구독 중이면 그 말도 읽음입니다. 구독하지 않으면 상대 `unreadCount`가 올라갑니다.
 
 목록 미리보기용 `chat_rooms.last_message`는 `$set`으로만 갱신합니다. 목록 HTTP를 다시 치지 않아도, `/user/queue/chat-list`를 구독한 소켓은 그 방 한 줄만 패치하면 됩니다.
 
@@ -442,9 +448,9 @@ TEXT의 `last_message.content`는 본문, IMAGE는 `사진`입니다.
 
 같은 `/ws-chat` 연결입니다. 전체 목록 화면과, 방 안 왼쪽 목록이 이 큐 하나로 한 줄을 패치합니다. 방마다 `/topic/chat.{roomId}`를 구독하지 않습니다. 방 topic 페이로드는 바꾸지 않습니다.
 
-참여자 UUID마다 `convertAndSendToUser` 합니다. 소켓이 없거나 이 큐를 구독하지 않으면 그 순간에는 도착하지 않고, 나중에 `GET /api/v1/chat/rooms`가 `last_message`를 읽습니다.
+참여자 UUID마다 `convertAndSendToUser` 합니다. `unreadCount`는 받는 사람마다 다릅니다. 소켓이 없거나 이 큐를 구독하지 않으면 그 순간에는 도착하지 않고, 나중에 `GET /api/v1/chat/rooms`가 `last_message`와 미읽음 수를 읽습니다.
 
-`unreadCount`는 이 단계에서 항상 `0`입니다. `lastRead`·뱃지는 후속입니다.
+보낸 사람·그 방 topic 구독 중인 상대는 `unreadCount` 0입니다. 목록만 보고 있으면 상대 말 개수가 올라갑니다.
 
 ```json
 {
@@ -453,7 +459,7 @@ TEXT의 `last_message.content`는 본문, IMAGE는 `사진`입니다.
     "content": "안녕하세요",
     "createdAt": "2026-08-20T05:00:00Z"
   },
-  "unreadCount": 0,
+  "unreadCount": 1,
   "updatedAt": "2026-08-20T05:00:00Z"
 }
 ```

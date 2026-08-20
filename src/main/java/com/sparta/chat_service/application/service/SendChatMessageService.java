@@ -4,10 +4,13 @@ import com.sparta.chat_service.application.port.in.SendChatMessageUseCase;
 import com.sparta.chat_service.application.port.in.dto.ChatMessageItemDto;
 import com.sparta.chat_service.application.port.in.dto.ChatMessageMetadataDto;
 import com.sparta.chat_service.application.port.in.dto.SendChatMessageCommandDto;
+import com.sparta.chat_service.application.port.out.ChatRoomPresencePort;
+import com.sparta.chat_service.application.port.out.LoadChatMessagePort;
 import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
 import com.sparta.chat_service.application.port.out.PublishChatListPreviewPort;
 import com.sparta.chat_service.application.port.out.SaveChatMessagePort;
 import com.sparta.chat_service.application.port.out.UpdateChatRoomLastMessagePort;
+import com.sparta.chat_service.application.port.out.UpdateParticipantLastReadPort;
 import com.sparta.chat_service.application.port.out.dto.ChatListPreviewDto;
 import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
 import com.sparta.chat_service.domain.exception.ChatRoomAccessDeniedException;
@@ -21,6 +24,8 @@ import com.sparta.chat_service.domain.model.MessageType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+
 @Service
 @RequiredArgsConstructor
 public class SendChatMessageService implements SendChatMessageUseCase {
@@ -30,6 +35,9 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 	private final LoadChatRoomPort loadChatRoomPort;
 	private final SaveChatMessagePort saveChatMessagePort;
 	private final UpdateChatRoomLastMessagePort updateChatRoomLastMessagePort;
+	private final UpdateParticipantLastReadPort updateParticipantLastReadPort;
+	private final ChatRoomPresencePort chatRoomPresencePort;
+	private final LoadChatMessagePort loadChatMessagePort;
 	private final PublishChatListPreviewPort publishChatListPreviewPort;
 
 	@Override
@@ -43,8 +51,39 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 		ChatMessage saved = saveChatMessagePort.save(toNewMessage(room.getId(), senderUuid, command));
 		LastMessage lastMessage = LastMessage.create(preview(saved), saved.getCreatedAt());
 		updateChatRoomLastMessagePort.updateLastMessage(room.getId(), lastMessage);
-		publishChatListPreviewPort.publish(room.participantUuids(), toListPreview(room.getId(), lastMessage));
+		markReadForViewers(room, senderUuid, saved.getCreatedAt());
+		publishListPreviews(room, senderUuid, lastMessage);
 		return toItem(saved);
+	}
+
+	private void markReadForViewers(ChatRoom room, String senderUuid, Instant lastReadAt) {
+		updateParticipantLastReadPort.updateLastRead(room.getId(), senderUuid, lastReadAt);
+		for (String memberUuid : room.participantUuids()) {
+			if (senderUuid.equals(memberUuid)) {
+				continue;
+			}
+			if (chatRoomPresencePort.isViewing(memberUuid, room.getId())) {
+				updateParticipantLastReadPort.updateLastRead(room.getId(), memberUuid, lastReadAt);
+			}
+		}
+	}
+
+	private void publishListPreviews(ChatRoom room, String senderUuid, LastMessage lastMessage) {
+		for (String memberUuid : room.participantUuids()) {
+			publishChatListPreviewPort.publish(memberUuid, toListPreview(
+					room.getId(),
+					lastMessage,
+					unreadCountFor(room, senderUuid, memberUuid)
+			));
+		}
+	}
+
+	private int unreadCountFor(ChatRoom room, String senderUuid, String memberUuid) {
+		if (senderUuid.equals(memberUuid) || chatRoomPresencePort.isViewing(memberUuid, room.getId())) {
+			return 0;
+		}
+		Instant lastReadAt = room.lastReadAt(memberUuid).orElse(null);
+		return loadChatMessagePort.countUnread(room.getId(), memberUuid, lastReadAt);
 	}
 
 	private ChatMessage toNewMessage(String roomId, String senderUuid, SendChatMessageCommandDto command) {
@@ -70,14 +109,14 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 		);
 	}
 
-	private ChatListPreviewDto toListPreview(String roomId, LastMessage lastMessage) {
+	private ChatListPreviewDto toListPreview(String roomId, LastMessage lastMessage, int unreadCount) {
 		return ChatListPreviewDto.builder()
 				.roomId(roomId)
 				.lastMessage(ChatListPreviewDto.LastMessage.builder()
 						.content(lastMessage.getContent())
 						.createdAt(lastMessage.getCreatedAt())
 						.build())
-				.unreadCount(0)
+				.unreadCount(unreadCount)
 				.updatedAt(lastMessage.getCreatedAt())
 				.build();
 	}

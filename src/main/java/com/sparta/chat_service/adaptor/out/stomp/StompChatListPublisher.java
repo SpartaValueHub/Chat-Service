@@ -7,9 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
-// 참여자 개인 큐로 목록 lastMessage 패치
+// 해당 회원 개인 큐로 목록 lastMessage·unreadCount 패치
 @Component
 @RequiredArgsConstructor
 public class StompChatListPublisher implements PublishChatListPreviewPort {
@@ -19,17 +17,11 @@ public class StompChatListPublisher implements PublishChatListPreviewPort {
 	private final SimpMessagingTemplate messagingTemplate;
 
 	@Override
-	public void publish(List<String> memberUuids, ChatListPreviewDto preview) {
-		if (preview == null || memberUuids == null || memberUuids.isEmpty()) {
+	public void publish(String memberUuid, ChatListPreviewDto preview) {
+		if (preview == null || memberUuid == null || memberUuid.isBlank()) {
 			return;
 		}
-		ChatListPreviewVo payload = toVo(preview);
-		for (String memberUuid : memberUuids) {
-			if (memberUuid == null || memberUuid.isBlank()) {
-				continue;
-			}
-			messagingTemplate.convertAndSendToUser(memberUuid.trim(), CHAT_LIST_QUEUE, payload);
-		}
+		messagingTemplate.convertAndSendToUser(memberUuid.trim(), CHAT_LIST_QUEUE, toVo(preview));
 	}
 
 	private ChatListPreviewVo toVo(ChatListPreviewDto preview) {

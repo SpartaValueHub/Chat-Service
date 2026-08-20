@@ -13,6 +13,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -57,6 +58,21 @@ public class ChatMessageMongoAdapter implements LoadChatMessagePort, SaveChatMes
 				.with(newestFirst())
 				.limit(limit);
 		return reverseToOldestFirst(find(query));
+	}
+
+	@Override
+	public int countUnread(String roomId, String viewerUuid, Instant lastReadAt) {
+		if (roomId == null || roomId.isBlank() || viewerUuid == null || viewerUuid.isBlank()) {
+			return 0;
+		}
+		Criteria criteria = Criteria.where("room_id").is(roomId)
+				.and("sender_uuid").ne(viewerUuid.trim());
+		if (lastReadAt != null) {
+			criteria = criteria.and("created_at").gt(lastReadAt);
+		}
+		Long count = reactiveMongoTemplate.count(Query.query(criteria), ChatMessageEntity.class)
+				.block(MONGO_TIMEOUT);
+		return count == null ? 0 : count.intValue();
 	}
 
 	@Override
