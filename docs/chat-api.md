@@ -363,9 +363,9 @@ Query
 
 ### Summary
 
-상세 화면에서 말을 보내면 **먼저 Mongo에 저장**한 뒤, 그 방 topic 구독자에게만 뿌립니다. 상대가 구독하지 않아도 저장됩니다. 다시 들어오면 이력 REST로 보입니다.
+상세 화면에서 말을 보내면 **먼저 Mongo에 저장**한 뒤, 그 방 topic 구독자에게 말풍선을 뿌립니다. 같은 저장 직후, 참여자 개인 큐로 목록 한 줄 미리보기도 푸시합니다. 상대가 구독하지 않아도 저장됩니다. 다시 들어오면 이력 REST로 보입니다.
 
-목록 미리보기용 `chat_rooms.last_message`는 `$set`으로만 갱신합니다. 목록 화면 실시간 푸시는 후속입니다.
+목록 미리보기용 `chat_rooms.last_message`는 `$set`으로만 갱신합니다. 목록 HTTP를 다시 치지 않아도, `/user/queue/chat-list`를 구독한 소켓은 그 방 한 줄만 패치하면 됩니다.
 
 ### Handshake
 
@@ -381,6 +381,7 @@ STOMP prefix
 |------|--------|----|
 | 클라이언트 → 서버 | `/app` | `/app/chat.{roomId}` |
 | 서버 → 클라이언트 | `/topic` | `/topic/chat.{roomId}` |
+| 목록 미리보기 (해당 회원) | `/user/queue` | `/user/queue/chat-list` |
 | 에러 (해당 세션) | `/user/queue` | `/user/queue/errors` |
 
 ### Send
@@ -434,6 +435,30 @@ STOMP prefix
 ```
 
 TEXT의 `last_message.content`는 본문, IMAGE는 `사진`입니다.
+
+### List preview
+
+구독: `/user/queue/chat-list`
+
+같은 `/ws-chat` 연결입니다. 전체 목록 화면과, 방 안 왼쪽 목록이 이 큐 하나로 한 줄을 패치합니다. 방마다 `/topic/chat.{roomId}`를 구독하지 않습니다. 방 topic 페이로드는 바꾸지 않습니다.
+
+참여자 UUID마다 `convertAndSendToUser` 합니다. 소켓이 없거나 이 큐를 구독하지 않으면 그 순간에는 도착하지 않고, 나중에 `GET /api/v1/chat/rooms`가 `last_message`를 읽습니다.
+
+`unreadCount`는 이 단계에서 항상 `0`입니다. `lastRead`·뱃지는 후속입니다.
+
+```json
+{
+  "roomId": "aaaaaaaaaaaaaaaaaaaaaaaa",
+  "lastMessage": {
+    "content": "안녕하세요",
+    "createdAt": "2026-08-20T05:00:00Z"
+  },
+  "unreadCount": 0,
+  "updatedAt": "2026-08-20T05:00:00Z"
+}
+```
+
+IMAGE 미리보기의 `lastMessage.content`는 `사진`입니다. `updatedAt`은 저장된 메시지 시각과 같습니다.
 
 ### Errors
 

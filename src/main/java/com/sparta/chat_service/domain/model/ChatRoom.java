@@ -97,6 +97,14 @@ public class ChatRoom {
 				.anyMatch(participant -> memberUuid.equals(participant.getMemberUuid()));
 	}
 
+	// 목록 미리보기 푸시 대상 (참여자 UUID)
+	public List<String> participantUuids() {
+		return participants.stream()
+				.map(Participant::getMemberUuid)
+				.filter(memberUuid -> memberUuid != null && !memberUuid.isBlank())
+				.toList();
+	}
+
 	// 1:1 방에서 나 이외 참여자 UUID
 	public Optional<String> counterpartUuid(String memberUuid) {
 		if (memberUuid == null || memberUuid.isBlank()) {

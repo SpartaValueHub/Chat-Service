@@ -4,8 +4,10 @@ import com.sparta.chat_service.application.port.in.dto.ChatMessageItemDto;
 import com.sparta.chat_service.application.port.in.dto.ChatMessageMetadataDto;
 import com.sparta.chat_service.application.port.in.dto.SendChatMessageCommandDto;
 import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
+import com.sparta.chat_service.application.port.out.PublishChatListPreviewPort;
 import com.sparta.chat_service.application.port.out.SaveChatMessagePort;
 import com.sparta.chat_service.application.port.out.UpdateChatRoomLastMessagePort;
+import com.sparta.chat_service.application.port.out.dto.ChatListPreviewDto;
 import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
 import com.sparta.chat_service.domain.exception.ChatRoomAccessDeniedException;
 import com.sparta.chat_service.domain.exception.ChatRoomNotFoundException;
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,13 +43,15 @@ class SendChatMessageServiceTest {
 
 	private InMemoryChatRoomStore roomStore;
 	private InMemoryChatMessageStore messageStore;
+	private RecordingChatListPublisher listPublisher;
 	private SendChatMessageService service;
 
 	@BeforeEach
 	void setUp() {
 		roomStore = new InMemoryChatRoomStore();
 		messageStore = new InMemoryChatMessageStore();
-		service = new SendChatMessageService(roomStore, messageStore, roomStore);
+		listPublisher = new RecordingChatListPublisher();
+		service = new SendChatMessageService(roomStore, messageStore, roomStore, listPublisher);
 		roomStore.add(room());
 	}
 
@@ -70,6 +75,7 @@ class SendChatMessageServiceTest {
 	void send_rejectsNonParticipant() {
 		assertThrows(ChatRoomAccessDeniedException.class,
 				() -> service.send(command(STRANGER_UUID, "안녕", MessageType.TEXT, null)));
+		assertEquals(0, listPublisher.published.size());
 	}
 
 	@Test
@@ -89,6 +95,11 @@ class SendChatMessageServiceTest {
 		assertNull(result.getMetadata());
 		assertEquals(1, messageStore.messages.size());
 		assertEquals("안녕하세요", roomStore.lastMessage.getContent());
+		assertEquals(1, listPublisher.published.size());
+		assertEquals(List.of(SENDER_UUID, SELLER_UUID), listPublisher.published.get(0).memberUuids);
+		assertEquals("안녕하세요", listPublisher.published.get(0).preview.getLastMessage().getContent());
+		assertEquals(0, listPublisher.published.get(0).preview.getUnreadCount());
+		assertEquals(ROOM_ID, listPublisher.published.get(0).preview.getRoomId());
 	}
 
 	@Test
@@ -110,12 +121,14 @@ class SendChatMessageServiceTest {
 		assertEquals("https://cdn.example.com/chat/bag.png", result.getContent());
 		assertEquals("2.4MB", result.getMetadata().getFileSize());
 		assertEquals("사진", roomStore.lastMessage.getContent());
+		assertEquals("사진", listPublisher.published.get(0).preview.getLastMessage().getContent());
 	}
 
 	@Test
 	void send_rejectsReservationType() {
 		assertThrows(InvalidChatRoomRequestException.class,
 				() -> service.send(command(SENDER_UUID, "예약", MessageType.RESERVATION, null)));
+		assertEquals(0, listPublisher.published.size());
 	}
 
 	private SendChatMessageCommandDto command(
@@ -200,6 +213,26 @@ class SendChatMessageServiceTest {
 			);
 			messages.put(id, stored);
 			return stored;
+		}
+	}
+
+	private static final class RecordingChatListPublisher implements PublishChatListPreviewPort {
+
+		private final List<Published> published = new ArrayList<>();
+
+		@Override
+		public void publish(List<String> memberUuids, ChatListPreviewDto preview) {
+			published.add(new Published(List.copyOf(memberUuids), preview));
+		}
+
+		private static final class Published {
+			private final List<String> memberUuids;
+			private final ChatListPreviewDto preview;
+
+			private Published(List<String> memberUuids, ChatListPreviewDto preview) {
+				this.memberUuids = memberUuids;
+				this.preview = preview;
+			}
 		}
 	}
 }
