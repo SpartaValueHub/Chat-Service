@@ -169,6 +169,56 @@ Query·Body 없음. 페이징 없음.
 
 ---
 
+## 미읽음 총합
+
+### Summary
+
+헤더 채팅 아이콘 뱃지용입니다. 내가 참여한 모든 방의 `unreadCount`를 더한 값만 반환합니다. 상품 스냅샷·방 목록은 포함하지 않습니다.
+
+서버는 잘라 주지 않습니다. `99+` 표시는 프론트입니다. 실시간으로 방 숫자가 바뀌면 `/user/queue/chat-list`의 `unreadCount`로 합을 맞출 수 있습니다. 화면을 처음 그릴 때는 이 API를 칩니다.
+
+### Method · Path
+
+`GET /api/v1/chat/unread-count`
+
+### Auth
+
+필요 — Gateway JWT. Gateway가 `X-Member-Uuid` 헤더를 주입합니다.
+
+### Request
+
+Header
+
+| 필드          | 타입   | 필수 | 제약      |
+| ------------- | ------ | ---- | --------- |
+| X-Member-Uuid | string | O    | 회원 UUID |
+
+Query·Body 없음.
+
+### Response
+
+`200`
+
+| 필드 | 타입 |
+| ---- | ---- |
+| totalUnreadCount | number |
+
+방이 없거나 안 읽은 말이 없으면 `0`입니다. 내가 보낸 말은 포함하지 않습니다.
+
+```json
+{
+  "totalUnreadCount": 110
+}
+```
+
+### Errors
+
+| status | code              | 의미                    |
+| ------ | ----------------- | ----------------------- |
+| 401    | CHAT_AUTH_MISSING | X-Member-Uuid 헤더 없음 |
+
+---
+
 ## 채팅방 상세
 
 ### Summary
