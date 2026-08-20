@@ -6,8 +6,10 @@ import com.sparta.chat_service.adaptor.in.web.vo.ChatRoomListItemResponseVo;
 import com.sparta.chat_service.adaptor.in.web.vo.ChatRoomListResponseVo;
 import com.sparta.chat_service.adaptor.in.web.vo.CreateChatRoomRequestVo;
 import com.sparta.chat_service.adaptor.in.web.vo.CreateChatRoomResponseVo;
+import com.sparta.chat_service.adaptor.in.web.vo.TotalUnreadCountResponseVo;
 import com.sparta.chat_service.application.port.in.CreateChatRoomUseCase;
 import com.sparta.chat_service.application.port.in.GetChatRoomDetailUseCase;
+import com.sparta.chat_service.application.port.in.GetTotalUnreadCountUseCase;
 import com.sparta.chat_service.application.port.in.ListChatMessagesUseCase;
 import com.sparta.chat_service.application.port.in.ListChatRoomsUseCase;
 import com.sparta.chat_service.application.port.in.dto.ChatMessageItemDto;
@@ -47,6 +49,7 @@ public class ChatRoomController {
 
 	private final CreateChatRoomUseCase createChatRoomUseCase;
 	private final ListChatRoomsUseCase listChatRoomsUseCase;
+	private final GetTotalUnreadCountUseCase getTotalUnreadCountUseCase;
 	private final GetChatRoomDetailUseCase getChatRoomDetailUseCase;
 	private final ListChatMessagesUseCase listChatMessagesUseCase;
 
@@ -56,6 +59,15 @@ public class ChatRoomController {
 	) {
 		ChatRoomListResultDto resultDto = listChatRoomsUseCase.list(memberUuid);
 		return ResponseEntity.ok(toListVo(resultDto));
+	}
+
+	@GetMapping("/unread-count")
+	public ResponseEntity<TotalUnreadCountResponseVo> getTotalUnreadCount(
+			@RequestHeader(value = MEMBER_UUID_HEADER, required = false) String memberUuid
+	) {
+		return ResponseEntity.ok(TotalUnreadCountResponseVo.builder()
+				.totalUnreadCount(getTotalUnreadCountUseCase.get(memberUuid).getTotalUnreadCount())
+				.build());
 	}
 
 	@GetMapping("/rooms/{roomId}")
