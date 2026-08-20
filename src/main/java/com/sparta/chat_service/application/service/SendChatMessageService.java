@@ -5,8 +5,10 @@ import com.sparta.chat_service.application.port.in.dto.ChatMessageItemDto;
 import com.sparta.chat_service.application.port.in.dto.ChatMessageMetadataDto;
 import com.sparta.chat_service.application.port.in.dto.SendChatMessageCommandDto;
 import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
+import com.sparta.chat_service.application.port.out.PublishChatListPreviewPort;
 import com.sparta.chat_service.application.port.out.SaveChatMessagePort;
 import com.sparta.chat_service.application.port.out.UpdateChatRoomLastMessagePort;
+import com.sparta.chat_service.application.port.out.dto.ChatListPreviewDto;
 import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
 import com.sparta.chat_service.domain.exception.ChatRoomAccessDeniedException;
 import com.sparta.chat_service.domain.exception.ChatRoomNotFoundException;
@@ -28,6 +30,7 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 	private final LoadChatRoomPort loadChatRoomPort;
 	private final SaveChatMessagePort saveChatMessagePort;
 	private final UpdateChatRoomLastMessagePort updateChatRoomLastMessagePort;
+	private final PublishChatListPreviewPort publishChatListPreviewPort;
 
 	@Override
 	public ChatMessageItemDto send(SendChatMessageCommandDto command) {
@@ -38,10 +41,9 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 		String roomId = requireText(command.getRoomId(), "roomId는 필수입니다.");
 		ChatRoom room = requireAccessibleRoom(senderUuid, roomId);
 		ChatMessage saved = saveChatMessagePort.save(toNewMessage(room.getId(), senderUuid, command));
-		updateChatRoomLastMessagePort.updateLastMessage(
-				room.getId(),
-				LastMessage.create(preview(saved), saved.getCreatedAt())
-		);
+		LastMessage lastMessage = LastMessage.create(preview(saved), saved.getCreatedAt());
+		updateChatRoomLastMessagePort.updateLastMessage(room.getId(), lastMessage);
+		publishChatListPreviewPort.publish(room.participantUuids(), toListPreview(room.getId(), lastMessage));
 		return toItem(saved);
 	}
 
@@ -66,6 +68,18 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 				metadataDto.getImageWidth(),
 				metadataDto.getImageHeight()
 		);
+	}
+
+	private ChatListPreviewDto toListPreview(String roomId, LastMessage lastMessage) {
+		return ChatListPreviewDto.builder()
+				.roomId(roomId)
+				.lastMessage(ChatListPreviewDto.LastMessage.builder()
+						.content(lastMessage.getContent())
+						.createdAt(lastMessage.getCreatedAt())
+						.build())
+				.unreadCount(0)
+				.updatedAt(lastMessage.getCreatedAt())
+				.build();
 	}
 
 	private String preview(ChatMessage message) {
