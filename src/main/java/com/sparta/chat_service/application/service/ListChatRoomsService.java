@@ -6,6 +6,7 @@ import com.sparta.chat_service.application.port.in.dto.ChatRoomListItemDto;
 import com.sparta.chat_service.application.port.in.dto.ChatRoomListLastMessageDto;
 import com.sparta.chat_service.application.port.in.dto.ChatRoomListProductDto;
 import com.sparta.chat_service.application.port.in.dto.ChatRoomListResultDto;
+import com.sparta.chat_service.application.port.out.LoadChatMessagePort;
 import com.sparta.chat_service.application.port.out.LoadChatProductPostPort;
 import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
 import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
@@ -26,11 +27,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ListChatRoomsService implements ListChatRoomsUseCase {
 
-	// 6단계에서 lastRead 기반으로 채우기 전까지 목록 뱃지는 0
-	private static final int UNREAD_COUNT_PLACEHOLDER = 0;
-
 	private final LoadChatRoomPort loadChatRoomPort;
 	private final LoadChatProductPostPort loadChatProductPostPort;
+	private final LoadChatMessagePort loadChatMessagePort;
 
 	@Override
 	public ChatRoomListResultDto list(String memberUuid) {
@@ -67,7 +66,11 @@ public class ListChatRoomsService implements ListChatRoomsUseCase {
 						.memberUuid(room.counterpartUuid(viewerUuid).orElse(null))
 						.build())
 				.lastMessage(toLastMessage(room.getLastMessage()))
-				.unreadCount(UNREAD_COUNT_PLACEHOLDER)
+				.unreadCount(loadChatMessagePort.countUnread(
+						room.getId(),
+						viewerUuid,
+						room.lastReadAt(viewerUuid).orElse(null)
+				))
 				.updatedAt(room.getUpdatedAt())
 				.build();
 	}

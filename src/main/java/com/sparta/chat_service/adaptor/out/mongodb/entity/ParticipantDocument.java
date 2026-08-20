@@ -25,10 +25,15 @@ public class ParticipantDocument {
 	@Field("joined_at")
 	private Instant joinedAt;
 
+	// 이 참여자가 읽은 마지막 메시지 시각
+	@Field("last_read_at")
+	private Instant lastReadAt;
+
 	@Builder
-	private ParticipantDocument(String memberUuid, Boolean inRoom, Instant joinedAt) {
+	private ParticipantDocument(String memberUuid, Boolean inRoom, Instant joinedAt, Instant lastReadAt) {
 		this.memberUuid = memberUuid;
 		this.inRoom = inRoom;
 		this.joinedAt = joinedAt;
+		this.lastReadAt = lastReadAt;
 	}
 }

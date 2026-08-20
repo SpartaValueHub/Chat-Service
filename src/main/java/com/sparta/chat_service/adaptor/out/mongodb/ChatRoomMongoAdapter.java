@@ -6,6 +6,7 @@ import com.sparta.chat_service.adaptor.out.mongodb.mapper.ChatMongoMapper;
 import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
 import com.sparta.chat_service.application.port.out.SaveChatRoomPort;
 import com.sparta.chat_service.application.port.out.UpdateChatRoomLastMessagePort;
+import com.sparta.chat_service.application.port.out.UpdateParticipantLastReadPort;
 import com.sparta.chat_service.domain.model.ChatRoom;
 import com.sparta.chat_service.domain.model.LastMessage;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +17,15 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
 // chat_rooms Mongo Adapter
 @Repository
 @RequiredArgsConstructor
-public class ChatRoomMongoAdapter implements LoadChatRoomPort, SaveChatRoomPort, UpdateChatRoomLastMessagePort {
+public class ChatRoomMongoAdapter implements LoadChatRoomPort, SaveChatRoomPort, UpdateChatRoomLastMessagePort,
+		UpdateParticipantLastReadPort {
 
 	private static final Duration MONGO_TIMEOUT = Duration.ofSeconds(5);
 
@@ -90,6 +93,18 @@ public class ChatRoomMongoAdapter implements LoadChatRoomPort, SaveChatRoomPort,
 						.createdAt(lastMessage.getCreatedAt())
 						.build())
 				.set("updated_at", lastMessage.getCreatedAt());
+		reactiveMongoTemplate.updateFirst(query, update, ChatRoomEntity.class)
+				.block(MONGO_TIMEOUT);
+	}
+
+	@Override
+	public void updateLastRead(String roomId, String memberUuid, Instant lastReadAt) {
+		if (roomId == null || roomId.isBlank() || memberUuid == null || memberUuid.isBlank() || lastReadAt == null) {
+			return;
+		}
+		Query query = Query.query(Criteria.where("_id").is(roomId)
+				.and("participants.member_uuid").is(memberUuid.trim()));
+		Update update = new Update().set("participants.$.last_read_at", lastReadAt);
 		reactiveMongoTemplate.updateFirst(query, update, ChatRoomEntity.class)
 				.block(MONGO_TIMEOUT);
 	}

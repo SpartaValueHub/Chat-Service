@@ -80,6 +80,7 @@ public class ChatMongoMapper {
 						.memberUuid(participant.getMemberUuid())
 						.inRoom(participant.isInRoom())
 						.joinedAt(participant.getJoinedAt())
+						.lastReadAt(participant.getLastReadAt())
 						.build())
 				.toList();
 	}
@@ -92,7 +93,8 @@ public class ChatMongoMapper {
 				.map(document -> Participant.restore(
 						document.getMemberUuid(),
 						Boolean.TRUE.equals(document.getInRoom()),
-						document.getJoinedAt()
+						document.getJoinedAt(),
+						document.getLastReadAt()
 				))
 				.toList();
 	}

@@ -2,8 +2,12 @@ package com.sparta.chat_service.application.service;
 
 import com.sparta.chat_service.application.port.in.ResolveChatUserProfileUseCase;
 import com.sparta.chat_service.application.port.in.dto.ChatRoomDetailResultDto;
+import com.sparta.chat_service.application.port.out.LoadChatMessagePort;
 import com.sparta.chat_service.application.port.out.LoadChatProductPostPort;
 import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
+import com.sparta.chat_service.application.port.out.PublishChatListPreviewPort;
+import com.sparta.chat_service.application.port.out.UpdateParticipantLastReadPort;
+import com.sparta.chat_service.application.port.out.dto.ChatListPreviewDto;
 import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
 import com.sparta.chat_service.domain.exception.ChatRoomAccessDeniedException;
 import com.sparta.chat_service.domain.exception.ChatRoomNotFoundException;
@@ -14,10 +18,13 @@ import com.sparta.chat_service.domain.model.ChatUserProfile;
 import com.sparta.chat_service.domain.model.MemberGrade;
 import com.sparta.chat_service.domain.model.Participant;
 import com.sparta.chat_service.domain.model.TradeStatus;
+import com.sparta.chat_service.domain.model.ChatMessage;
+import com.sparta.chat_service.domain.model.MessageType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +45,9 @@ class GetChatRoomDetailServiceTest {
 
 	private InMemoryChatRoomStore roomStore;
 	private InMemoryChatProductPostStore productPostStore;
+	private InMemoryChatMessageStore messageStore;
+	private RecordingLastReadStore lastReadStore;
+	private RecordingChatListPublisher listPublisher;
 	private StubResolveChatUserProfileUseCase resolveUseCase;
 	private GetChatRoomDetailService service;
 
@@ -45,8 +55,18 @@ class GetChatRoomDetailServiceTest {
 	void setUp() {
 		roomStore = new InMemoryChatRoomStore();
 		productPostStore = new InMemoryChatProductPostStore();
+		messageStore = new InMemoryChatMessageStore();
+		lastReadStore = new RecordingLastReadStore();
+		listPublisher = new RecordingChatListPublisher();
 		resolveUseCase = new StubResolveChatUserProfileUseCase();
-		service = new GetChatRoomDetailService(roomStore, productPostStore, resolveUseCase);
+		service = new GetChatRoomDetailService(
+				roomStore,
+				productPostStore,
+				messageStore,
+				lastReadStore,
+				listPublisher,
+				resolveUseCase
+		);
 	}
 
 	@Test
@@ -116,6 +136,37 @@ class GetChatRoomDetailServiceTest {
 		assertEquals("https://cdn.example.com/profiles/222.png", result.getCounterpart().getProfileImageUrl());
 	}
 
+	@Test
+	void get_marksViewerReadAndPushesZeroUnread() {
+		roomStore.add(room());
+		Instant createdAt = Instant.parse("2026-08-20T05:00:00Z");
+		messageStore.add(ChatMessage.restore(
+				"msg-1",
+				ROOM_ID,
+				SELLER_UUID,
+				MessageType.TEXT,
+				"안녕하세요",
+				null,
+				createdAt
+		));
+
+		service.get(VIEWER_UUID, ROOM_ID);
+
+		assertEquals(createdAt, lastReadStore.lastReadAt(ROOM_ID, VIEWER_UUID));
+		assertNull(lastReadStore.lastReadAt(ROOM_ID, SELLER_UUID));
+		assertEquals(0, listPublisher.preview(VIEWER_UUID).getUnreadCount());
+		assertEquals(ROOM_ID, listPublisher.preview(VIEWER_UUID).getRoomId());
+	}
+
+	@Test
+	void get_doesNotMarkReadWhenAccessDenied() {
+		roomStore.add(room());
+
+		assertThrows(ChatRoomAccessDeniedException.class, () -> service.get(STRANGER_UUID, ROOM_ID));
+		assertNull(lastReadStore.lastReadAt(ROOM_ID, STRANGER_UUID));
+		assertEquals(0, listPublisher.published.size());
+	}
+
 	private ChatRoom room() {
 		Instant joinedAt = Instant.parse("2026-08-01T00:00:00Z");
 		return ChatRoom.restore(
@@ -155,6 +206,81 @@ class GetChatRoomDetailServiceTest {
 		@Override
 		public List<ChatRoom> findByParticipant(String memberUuid) {
 			return List.of();
+		}
+	}
+
+	private static final class InMemoryChatMessageStore implements LoadChatMessagePort {
+
+		private final Map<String, ChatMessage> messages = new HashMap<>();
+
+		void add(ChatMessage message) {
+			messages.put(message.getId(), message);
+		}
+
+		@Override
+		public Optional<ChatMessage> findById(String messageId) {
+			return Optional.ofNullable(messages.get(messageId));
+		}
+
+		@Override
+		public List<ChatMessage> findLatestByRoomId(String roomId, int limit) {
+			return messages.values().stream()
+					.filter(message -> roomId.equals(message.getRoomId()))
+					.sorted((left, right) -> right.getCreatedAt().compareTo(left.getCreatedAt()))
+					.limit(limit)
+					.toList();
+		}
+
+		@Override
+		public List<ChatMessage> findByRoomIdBefore(String roomId, ChatMessage cursor, int limit) {
+			return List.of();
+		}
+
+		@Override
+		public int countUnread(String roomId, String viewerUuid, Instant lastReadAt) {
+			return 0;
+		}
+	}
+
+	private static final class RecordingLastReadStore implements UpdateParticipantLastReadPort {
+
+		private final Map<String, Instant> lastReads = new HashMap<>();
+
+		Instant lastReadAt(String roomId, String memberUuid) {
+			return lastReads.get(roomId + "|" + memberUuid);
+		}
+
+		@Override
+		public void updateLastRead(String roomId, String memberUuid, Instant lastReadAt) {
+			lastReads.put(roomId + "|" + memberUuid, lastReadAt);
+		}
+	}
+
+	private static final class RecordingChatListPublisher implements PublishChatListPreviewPort {
+
+		private final List<Published> published = new ArrayList<>();
+
+		@Override
+		public void publish(String memberUuid, ChatListPreviewDto preview) {
+			published.add(new Published(memberUuid, preview));
+		}
+
+		ChatListPreviewDto preview(String memberUuid) {
+			return published.stream()
+					.filter(item -> memberUuid.equals(item.memberUuid))
+					.map(item -> item.preview)
+					.findFirst()
+					.orElseThrow();
+		}
+
+		private static final class Published {
+			private final String memberUuid;
+			private final ChatListPreviewDto preview;
+
+			private Published(String memberUuid, ChatListPreviewDto preview) {
+				this.memberUuid = memberUuid;
+				this.preview = preview;
+			}
 		}
 	}
 

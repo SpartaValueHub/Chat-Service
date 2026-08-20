@@ -105,6 +105,17 @@ public class ChatRoom {
 				.toList();
 	}
 
+	// 해당 참여자의 lastRead. 없으면 empty
+	public Optional<Instant> lastReadAt(String memberUuid) {
+		if (memberUuid == null || memberUuid.isBlank()) {
+			return Optional.empty();
+		}
+		return participants.stream()
+				.filter(participant -> memberUuid.equals(participant.getMemberUuid()))
+				.findFirst()
+				.map(Participant::getLastReadAt);
+	}
+
 	// 1:1 방에서 나 이외 참여자 UUID
 	public Optional<String> counterpartUuid(String memberUuid) {
 		if (memberUuid == null || memberUuid.isBlank()) {

@@ -2,6 +2,7 @@ package com.sparta.chat_service.adaptor.in.websocket.config;
 
 import com.sparta.chat_service.adaptor.in.websocket.MemberUuidHandshakeInterceptor;
 import com.sparta.chat_service.adaptor.in.websocket.StompAuthChannelInterceptor;
+import com.sparta.chat_service.adaptor.in.websocket.StompRoomPresenceInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -18,6 +19,7 @@ public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	private final MemberUuidHandshakeInterceptor memberUuidHandshakeInterceptor;
 	private final StompAuthChannelInterceptor stompAuthChannelInterceptor;
+	private final StompRoomPresenceInterceptor stompRoomPresenceInterceptor;
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -40,6 +42,6 @@ public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration.interceptors(stompAuthChannelInterceptor);
+		registration.interceptors(stompAuthChannelInterceptor, stompRoomPresenceInterceptor);
 	}
 }

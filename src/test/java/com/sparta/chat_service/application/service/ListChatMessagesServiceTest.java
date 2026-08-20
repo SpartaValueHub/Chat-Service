@@ -183,6 +183,15 @@ class ListChatMessagesServiceTest {
 			return reverse(older);
 		}
 
+		@Override
+		public int countUnread(String roomId, String viewerUuid, Instant lastReadAt) {
+			return (int) messages.values().stream()
+					.filter(message -> roomId.equals(message.getRoomId()))
+					.filter(message -> !viewerUuid.equals(message.getSenderUuid()))
+					.filter(message -> lastReadAt == null || message.getCreatedAt().isAfter(lastReadAt))
+					.count();
+		}
+
 		private List<ChatMessage> roomMessages(String roomId) {
 			return new ArrayList<>(messages.values().stream()
 					.filter(message -> roomId.equals(message.getRoomId()))
