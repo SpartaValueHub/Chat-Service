@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -16,6 +17,7 @@ import java.time.Instant;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Document(collection = "chat_messages")
+@CompoundIndex(name = "room_created_id", def = "{'room_id': 1, 'created_at': -1, '_id': -1}")
 public class ChatMessageEntity {
 
 	// MongoDB ObjectId

@@ -145,6 +145,7 @@ class ListChatRoomsServiceTest {
 		return ChatRoom.restore(
 				id,
 				productPostUuid,
+				memberUuid2,
 				List.of(Participant.join(memberUuid1, joinedAt), Participant.join(memberUuid2, joinedAt)),
 				lastMessage,
 				ChatRoomStatus.ACTIVE,
@@ -171,6 +172,13 @@ class ListChatRoomsServiceTest {
 		}
 
 		@Override
+		public Optional<ChatRoom> findById(String roomId) {
+			return rooms.stream()
+					.filter(room -> roomId.equals(room.getId()))
+					.findFirst();
+		}
+
+		@Override
 		public List<ChatRoom> findByParticipant(String memberUuid) {
 			return rooms.stream()
 					.filter(room -> room.getParticipants().stream()
@@ -193,6 +201,11 @@ class ListChatRoomsServiceTest {
 					.map(posts::get)
 					.filter(post -> post != null)
 					.toList();
+		}
+
+		@Override
+		public Optional<ChatProductPost> findByProductPostUuid(String productPostUuid) {
+			return Optional.ofNullable(posts.get(productPostUuid));
 		}
 	}
 }

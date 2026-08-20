@@ -25,6 +25,7 @@ public class ChatMongoMapper {
 		return ChatRoomEntity.builder()
 				.id(chatRoom.getId())
 				.productPostUuid(chatRoom.getProductPostUuid())
+				.sellerUuid(chatRoom.getSellerUuid())
 				.participants(toParticipantDocuments(chatRoom.getParticipants()))
 				.lastMessage(toLastMessageDocument(chatRoom.getLastMessage()))
 				.status(chatRoom.getStatus() != null ? chatRoom.getStatus().name() : null)
@@ -37,6 +38,7 @@ public class ChatMongoMapper {
 		return ChatRoom.restore(
 				entity.getId(),
 				entity.getProductPostUuid(),
+				entity.getSellerUuid(),
 				toParticipants(entity.getParticipants()),
 				toLastMessage(entity.getLastMessage()),
 				entity.getStatus() != null ? ChatRoomStatus.valueOf(entity.getStatus()) : null,

@@ -82,7 +82,7 @@ public class CreateChatRoomService implements CreateChatRoomUseCase {
 				Participant.join(buyerUuid, now),
 				Participant.join(sellerUuid, now)
 		);
-		return saveChatRoomPort.save(ChatRoom.create(productPostUuid, participants));
+		return saveChatRoomPort.save(ChatRoom.create(productPostUuid, sellerUuid, participants));
 	}
 
 	private CreateChatRoomResultDto toResult(

@@ -3,6 +3,8 @@ package com.sparta.chat_service.adaptor.in.web;
 import com.sparta.chat_service.adaptor.in.web.vo.ErrorResponseVo;
 import com.sparta.chat_service.domain.exception.CannotChatWithSelfException;
 import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
+import com.sparta.chat_service.domain.exception.ChatRoomAccessDeniedException;
+import com.sparta.chat_service.domain.exception.ChatRoomNotFoundException;
 import com.sparta.chat_service.domain.exception.ChatUserProfileNotFoundException;
 import com.sparta.chat_service.domain.exception.InvalidChatRoomRequestException;
 import com.sparta.chat_service.domain.exception.InvalidMemberUuidException;
@@ -52,6 +54,22 @@ public class GlobalExceptionHandler {
 			HttpServletRequest request
 	) {
 		return error(HttpStatus.BAD_REQUEST, exception.getCode(), exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(ChatRoomNotFoundException.class)
+	public ResponseEntity<ErrorResponseVo> handleRoomNotFound(
+			ChatRoomNotFoundException exception,
+			HttpServletRequest request
+	) {
+		return error(HttpStatus.NOT_FOUND, exception.getCode(), exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(ChatRoomAccessDeniedException.class)
+	public ResponseEntity<ErrorResponseVo> handleRoomAccessDenied(
+			ChatRoomAccessDeniedException exception,
+			HttpServletRequest request
+	) {
+		return error(HttpStatus.FORBIDDEN, exception.getCode(), exception.getMessage(), request);
 	}
 
 	@ExceptionHandler(ChatUserProfileNotFoundException.class)

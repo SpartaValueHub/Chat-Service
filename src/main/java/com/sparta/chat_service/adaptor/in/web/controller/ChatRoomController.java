@@ -1,11 +1,22 @@
 package com.sparta.chat_service.adaptor.in.web.controller;
 
+import com.sparta.chat_service.adaptor.in.web.vo.ChatMessageListResponseVo;
+import com.sparta.chat_service.adaptor.in.web.vo.ChatRoomDetailResponseVo;
 import com.sparta.chat_service.adaptor.in.web.vo.ChatRoomListItemResponseVo;
 import com.sparta.chat_service.adaptor.in.web.vo.ChatRoomListResponseVo;
 import com.sparta.chat_service.adaptor.in.web.vo.CreateChatRoomRequestVo;
 import com.sparta.chat_service.adaptor.in.web.vo.CreateChatRoomResponseVo;
 import com.sparta.chat_service.application.port.in.CreateChatRoomUseCase;
+import com.sparta.chat_service.application.port.in.GetChatRoomDetailUseCase;
+import com.sparta.chat_service.application.port.in.ListChatMessagesUseCase;
 import com.sparta.chat_service.application.port.in.ListChatRoomsUseCase;
+import com.sparta.chat_service.application.port.in.dto.ChatMessageItemDto;
+import com.sparta.chat_service.application.port.in.dto.ChatMessageListResultDto;
+import com.sparta.chat_service.application.port.in.dto.ChatMessageMetadataDto;
+import com.sparta.chat_service.application.port.in.dto.ChatRoomDetailCounterpartDto;
+import com.sparta.chat_service.application.port.in.dto.ChatRoomDetailProductDto;
+import com.sparta.chat_service.application.port.in.dto.ChatRoomDetailResultDto;
+import com.sparta.chat_service.application.port.in.dto.ChatRoomDetailSellerDto;
 import com.sparta.chat_service.application.port.in.dto.ChatRoomListCounterpartDto;
 import com.sparta.chat_service.application.port.in.dto.ChatRoomListItemDto;
 import com.sparta.chat_service.application.port.in.dto.ChatRoomListLastMessageDto;
@@ -18,10 +29,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
@@ -34,6 +47,8 @@ public class ChatRoomController {
 
 	private final CreateChatRoomUseCase createChatRoomUseCase;
 	private final ListChatRoomsUseCase listChatRoomsUseCase;
+	private final GetChatRoomDetailUseCase getChatRoomDetailUseCase;
+	private final ListChatMessagesUseCase listChatMessagesUseCase;
 
 	@GetMapping("/rooms")
 	public ResponseEntity<ChatRoomListResponseVo> listChatRooms(
@@ -41,6 +56,26 @@ public class ChatRoomController {
 	) {
 		ChatRoomListResultDto resultDto = listChatRoomsUseCase.list(memberUuid);
 		return ResponseEntity.ok(toListVo(resultDto));
+	}
+
+	@GetMapping("/rooms/{roomId}")
+	public ResponseEntity<ChatRoomDetailResponseVo> getChatRoom(
+			@RequestHeader(value = MEMBER_UUID_HEADER, required = false) String memberUuid,
+			@PathVariable String roomId
+	) {
+		ChatRoomDetailResultDto resultDto = getChatRoomDetailUseCase.get(memberUuid, roomId);
+		return ResponseEntity.ok(toDetailVo(resultDto));
+	}
+
+	@GetMapping("/rooms/{roomId}/messages")
+	public ResponseEntity<ChatMessageListResponseVo> listChatMessages(
+			@RequestHeader(value = MEMBER_UUID_HEADER, required = false) String memberUuid,
+			@PathVariable String roomId,
+			@RequestParam(value = "before", required = false) String before,
+			@RequestParam(value = "limit", required = false) Integer limit
+	) {
+		ChatMessageListResultDto resultDto = listChatMessagesUseCase.list(memberUuid, roomId, before, limit);
+		return ResponseEntity.ok(toMessageListVo(resultDto));
 	}
 
 	@PostMapping("/rooms")
@@ -127,6 +162,81 @@ public class ChatRoomController {
 		return ChatRoomListItemResponseVo.LastMessage.builder()
 				.content(lastMessageDto.getContent())
 				.createdAt(lastMessageDto.getCreatedAt())
+				.build();
+	}
+
+	private ChatRoomDetailResponseVo toDetailVo(ChatRoomDetailResultDto resultDto) {
+		return ChatRoomDetailResponseVo.builder()
+				.roomId(resultDto.getRoomId())
+				.productPost(toDetailProductVo(resultDto.getProductPost()))
+				.seller(toSellerVo(resultDto.getSeller()))
+				.counterpart(toCounterpartVo(resultDto.getCounterpart()))
+				.build();
+	}
+
+	private ChatRoomDetailResponseVo.ProductPost toDetailProductVo(ChatRoomDetailProductDto productDto) {
+		if (productDto == null) {
+			return null;
+		}
+		return ChatRoomDetailResponseVo.ProductPost.builder()
+				.productPostUuid(productDto.getProductPostUuid())
+				.productPostImageUrl(productDto.getProductPostImageUrl())
+				.productPostName(productDto.getProductPostName())
+				.price(productDto.getPrice())
+				.tradeStatus(productDto.getTradeStatus())
+				.build();
+	}
+
+	private ChatRoomDetailResponseVo.Seller toSellerVo(ChatRoomDetailSellerDto sellerDto) {
+		if (sellerDto == null) {
+			return null;
+		}
+		return ChatRoomDetailResponseVo.Seller.builder()
+				.memberUuid(sellerDto.getMemberUuid())
+				.nickname(sellerDto.getNickname())
+				.build();
+	}
+
+	private ChatRoomDetailResponseVo.Counterpart toCounterpartVo(ChatRoomDetailCounterpartDto counterpartDto) {
+		if (counterpartDto == null) {
+			return null;
+		}
+		return ChatRoomDetailResponseVo.Counterpart.builder()
+				.memberUuid(counterpartDto.getMemberUuid())
+				.nickname(counterpartDto.getNickname())
+				.profileImageUrl(counterpartDto.getProfileImageUrl())
+				.build();
+	}
+
+	private ChatMessageListResponseVo toMessageListVo(ChatMessageListResultDto resultDto) {
+		return ChatMessageListResponseVo.builder()
+				.messages(resultDto.getMessages().stream().map(this::toMessageVo).toList())
+				.build();
+	}
+
+	private ChatMessageListResponseVo.Message toMessageVo(ChatMessageItemDto itemDto) {
+		return ChatMessageListResponseVo.Message.builder()
+				.messageId(itemDto.getMessageId())
+				.senderUuid(itemDto.getSenderUuid())
+				.messageType(itemDto.getMessageType())
+				.content(itemDto.getContent())
+				.metadata(toMetadataVo(itemDto.getMetadata()))
+				.createdAt(itemDto.getCreatedAt())
+				.build();
+	}
+
+	private ChatMessageListResponseVo.Metadata toMetadataVo(ChatMessageMetadataDto metadataDto) {
+		if (metadataDto == null) {
+			return null;
+		}
+		return ChatMessageListResponseVo.Metadata.builder()
+				.fileSize(metadataDto.getFileSize())
+				.imageWidth(metadataDto.getImageWidth())
+				.imageHeight(metadataDto.getImageHeight())
+				.reservationId(metadataDto.getReservationId())
+				.meetAt(metadataDto.getMeetAt())
+				.price(metadataDto.getPrice())
+				.placeName(metadataDto.getPlaceName())
 				.build();
 	}
 }
