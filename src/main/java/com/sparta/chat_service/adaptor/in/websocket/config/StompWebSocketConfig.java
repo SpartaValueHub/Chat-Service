@@ -1,6 +1,10 @@
 package com.sparta.chat_service.adaptor.in.websocket.config;
 
+import com.sparta.chat_service.adaptor.in.websocket.MemberUuidHandshakeInterceptor;
+import com.sparta.chat_service.adaptor.in.websocket.StompAuthChannelInterceptor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -9,7 +13,11 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 // STOMP over WebSocket 인바운드 어댑터 설정
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+	private final MemberUuidHandshakeInterceptor memberUuidHandshakeInterceptor;
+	private final StompAuthChannelInterceptor stompAuthChannelInterceptor;
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -21,9 +29,17 @@ public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
-		// STOMP 핸드셰이크 엔드포인트
 		registry.addEndpoint("/ws-chat")
+				.addInterceptors(memberUuidHandshakeInterceptor)
+				.setAllowedOriginPatterns("*");
+		registry.addEndpoint("/ws-chat")
+				.addInterceptors(memberUuidHandshakeInterceptor)
 				.setAllowedOriginPatterns("*")
 				.withSockJS();
+	}
+
+	@Override
+	public void configureClientInboundChannel(ChannelRegistration registration) {
+		registration.interceptors(stompAuthChannelInterceptor);
 	}
 }

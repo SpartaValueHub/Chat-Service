@@ -1,14 +1,18 @@
 package com.sparta.chat_service.adaptor.out.mongodb;
 
 import com.sparta.chat_service.adaptor.out.mongodb.entity.ChatRoomEntity;
+import com.sparta.chat_service.adaptor.out.mongodb.entity.LastMessageDocument;
 import com.sparta.chat_service.adaptor.out.mongodb.mapper.ChatMongoMapper;
 import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
 import com.sparta.chat_service.application.port.out.SaveChatRoomPort;
+import com.sparta.chat_service.application.port.out.UpdateChatRoomLastMessagePort;
 import com.sparta.chat_service.domain.model.ChatRoom;
+import com.sparta.chat_service.domain.model.LastMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
 import java.time.Duration;
@@ -18,7 +22,7 @@ import java.util.Optional;
 // chat_rooms Mongo Adapter
 @Repository
 @RequiredArgsConstructor
-public class ChatRoomMongoAdapter implements LoadChatRoomPort, SaveChatRoomPort {
+public class ChatRoomMongoAdapter implements LoadChatRoomPort, SaveChatRoomPort, UpdateChatRoomLastMessagePort {
 
 	private static final Duration MONGO_TIMEOUT = Duration.ofSeconds(5);
 
@@ -72,5 +76,21 @@ public class ChatRoomMongoAdapter implements LoadChatRoomPort, SaveChatRoomPort 
 		ChatRoomEntity saved = reactiveMongoTemplate.save(chatMongoMapper.toEntity(chatRoom))
 				.block(MONGO_TIMEOUT);
 		return chatMongoMapper.toDomain(saved);
+	}
+
+	@Override
+	public void updateLastMessage(String roomId, LastMessage lastMessage) {
+		if (roomId == null || roomId.isBlank() || lastMessage == null) {
+			return;
+		}
+		Query query = Query.query(Criteria.where("_id").is(roomId));
+		Update update = new Update()
+				.set("last_message", LastMessageDocument.builder()
+						.content(lastMessage.getContent())
+						.createdAt(lastMessage.getCreatedAt())
+						.build())
+				.set("updated_at", lastMessage.getCreatedAt());
+		reactiveMongoTemplate.updateFirst(query, update, ChatRoomEntity.class)
+				.block(MONGO_TIMEOUT);
 	}
 }

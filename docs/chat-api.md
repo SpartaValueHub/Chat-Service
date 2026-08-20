@@ -259,7 +259,7 @@ Path
 
 ### Summary
 
-입장 시 지난 메시지를 REST로 가져옵니다. 실시간 수신은 포함하지 않습니다. `chat_messages`를 `createdAt` 기준 최신부터 읽고, 응답은 오래된 순입니다.
+입장 시 지난 메시지를 REST로 가져옵니다. 새 말의 실시간 수신은 STOMP를 사용합니다. `chat_messages`를 `createdAt` 기준 최신부터 읽고, 응답은 오래된 순입니다.
 
 ### Method · Path
 
@@ -356,4 +356,94 @@ Query
 | 400    | INVALID_REQUEST         | roomId/before/limit 오류 |
 | 404    | CHAT_ROOM_NOT_FOUND     | 채팅방 없음             |
 | 403    | CHAT_ROOM_ACCESS_DENIED | 참여자가 아님           |
+
+---
+
+## 채팅 메시지 전송 (STOMP)
+
+### Summary
+
+상세 화면에서 말을 보내면 **먼저 Mongo에 저장**한 뒤, 그 방 topic 구독자에게만 뿌립니다. 상대가 구독하지 않아도 저장됩니다. 다시 들어오면 이력 REST로 보입니다.
+
+목록 미리보기용 `chat_rooms.last_message`는 `$set`으로만 갱신합니다. 목록 화면 실시간 푸시는 후속입니다.
+
+### Handshake
+
+`GET /ws-chat` (native WebSocket) 또는 SockJS `GET /ws-chat`
+
+Gateway 경유: `/chat-service/ws-chat`
+
+CONNECT 헤더 또는 핸드셰이크 `X-Member-Uuid` (SockJS는 쿼리 `X-Member-Uuid`도 가능)
+
+STOMP prefix
+
+| 방향 | prefix | 예 |
+|------|--------|----|
+| 클라이언트 → 서버 | `/app` | `/app/chat.{roomId}` |
+| 서버 → 클라이언트 | `/topic` | `/topic/chat.{roomId}` |
+| 에러 (해당 세션) | `/user/queue` | `/user/queue/errors` |
+
+### Send
+
+목적지: `/app/chat.{roomId}`
+
+| 필드 | 타입 | 필수 | 제약 |
+|------|------|------|------|
+| messageType | string | X | 기본 `TEXT`. 이 단계 `TEXT` `IMAGE` |
+| content | string | O | TEXT=본문, IMAGE=이미지 URL |
+| metadata | object | X | IMAGE일 때 용량·가로·세로. TEXT는 null |
+
+```json
+{
+  "messageType": "TEXT",
+  "content": "안녕하세요",
+  "metadata": null
+}
+```
+
+이미지 (업로드는 다른 서비스, Chat은 URL만)
+
+```json
+{
+  "messageType": "IMAGE",
+  "content": "https://cdn.example.com/chat/bag.png",
+  "metadata": {
+    "fileSize": "2.4MB",
+    "imageWidth": 800,
+    "imageHeight": 600
+  }
+}
+```
+
+### Broadcast
+
+구독: `/topic/chat.{roomId}`
+
+저장이 끝난 문서와 같은 형태입니다. 말풍선 왼쪽/오른쪽은 `senderUuid`와 내 UUID를 비교합니다.
+
+```json
+{
+  "messageId": "67b1c2d3e4f5a6b7c8d9e0f3",
+  "roomId": "aaaaaaaaaaaaaaaaaaaaaaaa",
+  "senderUuid": "22222222-2222-4222-8222-222222222222",
+  "messageType": "TEXT",
+  "content": "안녕하세요",
+  "metadata": null,
+  "createdAt": "2026-08-20T05:00:00Z"
+}
+```
+
+TEXT의 `last_message.content`는 본문, IMAGE는 `사진`입니다.
+
+### Errors
+
+클라이언트는 `/user/queue/errors`를 구독합니다.
+
+| status | code | 의미 |
+|--------|------|------|
+| 401 | CHAT_AUTH_MISSING | X-Member-Uuid 없음 |
+| 400 | INVALID_REQUEST | 본문/타입 오류 |
+| 404 | CHAT_ROOM_NOT_FOUND | 채팅방 없음 |
+| 403 | CHAT_ROOM_ACCESS_DENIED | 참여자가 아님 |
+
 

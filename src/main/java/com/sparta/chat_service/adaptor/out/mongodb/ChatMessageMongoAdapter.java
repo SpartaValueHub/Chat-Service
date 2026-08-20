@@ -3,6 +3,7 @@ package com.sparta.chat_service.adaptor.out.mongodb;
 import com.sparta.chat_service.adaptor.out.mongodb.entity.ChatMessageEntity;
 import com.sparta.chat_service.adaptor.out.mongodb.mapper.ChatMongoMapper;
 import com.sparta.chat_service.application.port.out.LoadChatMessagePort;
+import com.sparta.chat_service.application.port.out.SaveChatMessagePort;
 import com.sparta.chat_service.domain.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -20,7 +21,7 @@ import java.util.Optional;
 // chat_messages Mongo Adapter
 @Repository
 @RequiredArgsConstructor
-public class ChatMessageMongoAdapter implements LoadChatMessagePort {
+public class ChatMessageMongoAdapter implements LoadChatMessagePort, SaveChatMessagePort {
 
 	private static final Duration MONGO_TIMEOUT = Duration.ofSeconds(5);
 
@@ -56,6 +57,13 @@ public class ChatMessageMongoAdapter implements LoadChatMessagePort {
 				.with(newestFirst())
 				.limit(limit);
 		return reverseToOldestFirst(find(query));
+	}
+
+	@Override
+	public ChatMessage save(ChatMessage chatMessage) {
+		ChatMessageEntity saved = reactiveMongoTemplate.save(chatMongoMapper.toEntity(chatMessage))
+				.block(MONGO_TIMEOUT);
+		return chatMongoMapper.toDomain(saved);
 	}
 
 	private List<ChatMessageEntity> find(Query query) {
