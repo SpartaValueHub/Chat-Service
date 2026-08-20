@@ -66,6 +66,7 @@ class CreateChatRoomServiceTest {
 		assertEquals(SELLER_UUID, result.getSellerUuid());
 		assertEquals(1, roomStore.saveCount.get());
 		assertEquals(2, resolveUseCase.callCount.get());
+		assertEquals(SELLER_UUID, roomStore.findById(result.getRoomId()).orElseThrow().getSellerUuid());
 
 		ChatProductPost productPost = productPostStore.posts.get(PRODUCT_POST_UUID);
 		assertEquals("중고 노트북", productPost.getProductPostName());
@@ -173,6 +174,11 @@ class CreateChatRoomServiceTest {
 		}
 
 		@Override
+		public Optional<ChatRoom> findById(String roomId) {
+			return Optional.ofNullable(rooms.get(roomId));
+		}
+
+		@Override
 		public List<ChatRoom> findByParticipant(String memberUuid) {
 			return rooms.values().stream()
 					.filter(room -> hasMember(room, memberUuid))
@@ -185,6 +191,7 @@ class CreateChatRoomServiceTest {
 			ChatRoom stored = ChatRoom.restore(
 					"room-" + saveCount.get(),
 					chatRoom.getProductPostUuid(),
+					chatRoom.getSellerUuid(),
 					chatRoom.getParticipants(),
 					chatRoom.getLastMessage(),
 					chatRoom.getStatus(),

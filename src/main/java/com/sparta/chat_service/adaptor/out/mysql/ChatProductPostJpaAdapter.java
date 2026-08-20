@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 // chat_product_posts JPA Adapter
 @Repository
@@ -30,6 +31,15 @@ public class ChatProductPostJpaAdapter implements LoadChatProductPostPort, SaveC
 		return chatProductPostJpaRepository.findAllById(productPostUuids).stream()
 				.map(chatProductPostJpaMapper::toDomain)
 				.toList();
+	}
+
+	@Override
+	public Optional<ChatProductPost> findByProductPostUuid(String productPostUuid) {
+		if (productPostUuid == null || productPostUuid.isBlank()) {
+			return Optional.empty();
+		}
+		return chatProductPostJpaRepository.findById(productPostUuid)
+				.map(chatProductPostJpaMapper::toDomain);
 	}
 
 	@Override

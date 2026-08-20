@@ -30,6 +30,10 @@ public class ChatRoomEntity {
 	@Field("product_post_uuid")
 	private String productPostUuid;
 
+	// 상품을 올린 판매자 UUID
+	@Field("seller_uuid")
+	private String sellerUuid;
+
 	// 참여자 목록
 	@Field("participants")
 	private List<ParticipantDocument> participants = new ArrayList<>();
@@ -56,6 +60,7 @@ public class ChatRoomEntity {
 	private ChatRoomEntity(
 			String id,
 			String productPostUuid,
+			String sellerUuid,
 			List<ParticipantDocument> participants,
 			LastMessageDocument lastMessage,
 			String status,
@@ -64,6 +69,7 @@ public class ChatRoomEntity {
 	) {
 		this.id = id;
 		this.productPostUuid = productPostUuid;
+		this.sellerUuid = sellerUuid;
 		this.participants = participants == null ? new ArrayList<>() : participants;
 		this.lastMessage = lastMessage;
 		this.status = status;
