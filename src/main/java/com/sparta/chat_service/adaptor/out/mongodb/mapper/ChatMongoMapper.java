@@ -128,6 +128,8 @@ public class ChatMongoMapper {
 				.meetAt(metadata.getMeetAt())
 				.price(metadata.getPrice())
 				.placeName(metadata.getPlaceName())
+				.latitude(metadata.getLatitude())
+				.longitude(metadata.getLongitude())
 				.build();
 	}
 
@@ -142,7 +144,9 @@ public class ChatMongoMapper {
 				document.getReservationId(),
 				document.getMeetAt(),
 				document.getPrice(),
-				document.getPlaceName()
+				document.getPlaceName(),
+				document.getLatitude(),
+				document.getLongitude()
 		);
 	}
 }

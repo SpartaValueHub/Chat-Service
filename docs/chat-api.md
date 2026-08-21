@@ -365,9 +365,11 @@ Query
 | messages[].metadata.meetAt | string (ISO-8601) |
 | messages[].metadata.price | number |
 | messages[].metadata.placeName | string |
+| messages[].metadata.latitude | number |
+| messages[].metadata.longitude | number |
 | messages[].createdAt | string (ISO-8601) |
 
-`messageType`: `TEXT` `IMAGE` `RESERVATION`. TEXT는 `metadata`가 `null`입니다.
+`messageType`: `TEXT` `IMAGE` `LOCATION` `RESERVATION`. TEXT는 `metadata`가 `null`입니다. LOCATION의 `content`는 `null`입니다.
 
 ```json
 {
@@ -446,9 +448,9 @@ STOMP prefix
 
 | 필드 | 타입 | 필수 | 제약 |
 |------|------|------|------|
-| messageType | string | X | 기본 `TEXT`. 이 단계 `TEXT` `IMAGE` |
-| content | string | O | TEXT=본문, IMAGE=이미지 URL |
-| metadata | object | X | IMAGE일 때 용량·가로·세로. TEXT는 null |
+| messageType | string | X | 기본 `TEXT`. 이 단계 `TEXT` `IMAGE` `LOCATION` |
+| content | string | 타입별 | TEXT=본문, IMAGE=이미지 URL. LOCATION은 null |
+| metadata | object | 타입별 | IMAGE=용량·가로·세로. LOCATION=위도·경도·장소명(선택). TEXT는 null |
 
 ```json
 {
@@ -472,6 +474,22 @@ STOMP prefix
 }
 ```
 
+장소 공유 (거래 예약이 아님. 지도 좌표만 저장)
+
+```json
+{
+  "messageType": "LOCATION",
+  "content": null,
+  "metadata": {
+    "latitude": 35.115,
+    "longitude": 129.042,
+    "placeName": "학원"
+  }
+}
+```
+
+`placeName`은 선택입니다. 프론트가 입력창 또는 SDK 주소를 넣으면 저장하고, 없으면 null입니다. 위도·경도는 필수입니다.
+
 ### Broadcast
 
 구독: `/topic/chat.{roomId}`
@@ -490,7 +508,7 @@ STOMP prefix
 }
 ```
 
-TEXT의 `last_message.content`는 본문, IMAGE는 `사진`입니다.
+TEXT의 `last_message.content`는 본문, IMAGE는 `사진이 공유 되었습니다.`, LOCATION은 `위치를 공유했습니다.`입니다.
 
 ### List preview
 

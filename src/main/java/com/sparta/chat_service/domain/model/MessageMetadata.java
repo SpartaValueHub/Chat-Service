@@ -22,8 +22,12 @@ public class MessageMetadata {
 	private final Instant meetAt;
 	// RESERVATION: 거래 금액
 	private final Long price;
-	// RESERVATION: 만남 장소명
+	// LOCATION / RESERVATION: 장소명
 	private final String placeName;
+	// LOCATION: 위도
+	private final Double latitude;
+	// LOCATION: 경도
+	private final Double longitude;
 
 	@Builder
 	private MessageMetadata(
@@ -33,7 +37,9 @@ public class MessageMetadata {
 			String reservationId,
 			Instant meetAt,
 			Long price,
-			String placeName
+			String placeName,
+			Double latitude,
+			Double longitude
 	) {
 		this.fileSize = fileSize;
 		this.imageWidth = imageWidth;
@@ -42,9 +48,10 @@ public class MessageMetadata {
 		this.meetAt = meetAt;
 		this.price = price;
 		this.placeName = placeName;
+		this.latitude = latitude;
+		this.longitude = longitude;
 	}
 
-	// 이미지 메시지 메타데이터 생성
 	public static MessageMetadata ofImage(String fileSize, Integer imageWidth, Integer imageHeight) {
 		return MessageMetadata.builder()
 				.fileSize(fileSize)
@@ -53,7 +60,14 @@ public class MessageMetadata {
 				.build();
 	}
 
-	// 예약 메시지 메타데이터 생성
+	public static MessageMetadata ofLocation(Double latitude, Double longitude, String placeName) {
+		return MessageMetadata.builder()
+				.latitude(latitude)
+				.longitude(longitude)
+				.placeName(placeName)
+				.build();
+	}
+
 	public static MessageMetadata ofReservation(
 			String reservationId,
 			Instant meetAt,
@@ -68,7 +82,6 @@ public class MessageMetadata {
 				.build();
 	}
 
-	// 영속 계층 복원용
 	public static MessageMetadata restore(
 			String fileSize,
 			Integer imageWidth,
@@ -76,7 +89,9 @@ public class MessageMetadata {
 			String reservationId,
 			Instant meetAt,
 			Long price,
-			String placeName
+			String placeName,
+			Double latitude,
+			Double longitude
 	) {
 		return MessageMetadata.builder()
 				.fileSize(fileSize)
@@ -86,6 +101,8 @@ public class MessageMetadata {
 				.meetAt(meetAt)
 				.price(price)
 				.placeName(placeName)
+				.latitude(latitude)
+				.longitude(longitude)
 				.build();
 	}
 }

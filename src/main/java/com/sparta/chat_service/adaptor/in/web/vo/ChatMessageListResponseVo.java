@@ -37,5 +37,7 @@ public class ChatMessageListResponseVo {
 		private final Instant meetAt;
 		private final Long price;
 		private final String placeName;
+		private final Double latitude;
+		private final Double longitude;
 	}
 }

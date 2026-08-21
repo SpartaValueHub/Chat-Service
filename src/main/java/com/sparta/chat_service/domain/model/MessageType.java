@@ -4,5 +4,6 @@ package com.sparta.chat_service.domain.model;
 public enum MessageType {
 	TEXT,
 	IMAGE,
+	LOCATION,
 	RESERVATION
 }

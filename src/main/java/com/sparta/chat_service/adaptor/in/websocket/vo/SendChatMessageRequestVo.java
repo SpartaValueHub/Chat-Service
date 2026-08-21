@@ -29,5 +29,7 @@ public class SendChatMessageRequestVo {
 		private Instant meetAt;
 		private Long price;
 		private String placeName;
+		private Double latitude;
+		private Double longitude;
 	}
 }

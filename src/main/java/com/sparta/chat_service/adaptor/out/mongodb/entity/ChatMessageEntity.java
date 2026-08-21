@@ -33,7 +33,7 @@ public class ChatMessageEntity {
 	@Field("sender_uuid")
 	private String senderUuid;
 
-	// 메시지 유형 (TEXT / IMAGE / RESERVATION)
+	// 메시지 유형 (TEXT / IMAGE / LOCATION / RESERVATION)
 	@Field("message_type")
 	private String messageType;
 

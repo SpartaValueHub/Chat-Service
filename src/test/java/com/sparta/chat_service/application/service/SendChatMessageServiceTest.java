@@ -148,8 +148,34 @@ class SendChatMessageServiceTest {
 		assertEquals(MessageType.IMAGE, result.getMessageType());
 		assertEquals("https://cdn.example.com/chat/bag.png", result.getContent());
 		assertEquals("2.4MB", result.getMetadata().getFileSize());
-		assertEquals("사진", roomStore.lastMessage.getContent());
-		assertEquals("사진", listPublisher.preview(SENDER_UUID).getLastMessage().getContent());
+		assertEquals("사진이 공유 되었습니다.", roomStore.lastMessage.getContent());
+		assertEquals("사진이 공유 되었습니다.", listPublisher.preview(SENDER_UUID).getLastMessage().getContent());
+	}
+
+	@Test
+	void send_savesLocationWithNullContent() {
+		ChatMessageMetadataDto metadata = ChatMessageMetadataDto.builder()
+				.latitude(35.115)
+				.longitude(129.042)
+				.placeName("학원")
+				.build();
+
+		ChatMessageItemDto result = service.send(command(SENDER_UUID, null, MessageType.LOCATION, metadata));
+
+		assertEquals(MessageType.LOCATION, result.getMessageType());
+		assertNull(result.getContent());
+		assertEquals(35.115, result.getMetadata().getLatitude());
+		assertEquals(129.042, result.getMetadata().getLongitude());
+		assertEquals("학원", result.getMetadata().getPlaceName());
+		assertEquals("위치를 공유했습니다.", roomStore.lastMessage.getContent());
+		assertEquals("위치를 공유했습니다.", listPublisher.preview(SENDER_UUID).getLastMessage().getContent());
+	}
+
+	@Test
+	void send_rejectsLocationWithoutCoordinates() {
+		assertThrows(InvalidChatRoomRequestException.class,
+				() -> service.send(command(SENDER_UUID, null, MessageType.LOCATION, null)));
+		assertEquals(0, listPublisher.published.size());
 	}
 
 	@Test
