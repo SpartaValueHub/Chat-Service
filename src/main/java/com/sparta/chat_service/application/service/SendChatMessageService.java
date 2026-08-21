@@ -30,7 +30,8 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class SendChatMessageService implements SendChatMessageUseCase {
 
-	private static final String IMAGE_PREVIEW = "사진";
+	private static final String IMAGE_PREVIEW = "사진이 공유 되었습니다.";
+	private static final String LOCATION_PREVIEW = "위치를 공유했습니다.";
 
 	private final LoadChatRoomPort loadChatRoomPort;
 	private final SaveChatMessagePort saveChatMessagePort;
@@ -88,6 +89,9 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 
 	private ChatMessage toNewMessage(String roomId, String senderUuid, SendChatMessageCommandDto command) {
 		MessageType messageType = command.getMessageType() == null ? MessageType.TEXT : command.getMessageType();
+		if (messageType == MessageType.LOCATION) {
+			return ChatMessage.createLocation(roomId, senderUuid, toLocationMetadata(command.getMetadata()));
+		}
 		String content = requireText(command.getContent(), "content는 필수입니다.");
 		if (messageType == MessageType.TEXT) {
 			return ChatMessage.createText(roomId, senderUuid, content);
@@ -109,6 +113,18 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 		);
 	}
 
+	private MessageMetadata toLocationMetadata(ChatMessageMetadataDto metadataDto) {
+		if (metadataDto == null || metadataDto.getLatitude() == null || metadataDto.getLongitude() == null) {
+			throw new InvalidChatRoomRequestException("latitude와 longitude는 필수입니다.");
+		}
+		Double latitude = metadataDto.getLatitude();
+		Double longitude = metadataDto.getLongitude();
+		if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+			throw new InvalidChatRoomRequestException("위도·경도 범위가 올바르지 않습니다.");
+		}
+		return MessageMetadata.ofLocation(latitude, longitude, blankToNull(metadataDto.getPlaceName()));
+	}
+
 	private ChatListPreviewDto toListPreview(String roomId, LastMessage lastMessage, int unreadCount) {
 		return ChatListPreviewDto.builder()
 				.roomId(roomId)
@@ -124,6 +140,9 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 	private String preview(ChatMessage message) {
 		if (message.getMessageType() == MessageType.IMAGE) {
 			return IMAGE_PREVIEW;
+		}
+		if (message.getMessageType() == MessageType.LOCATION) {
+			return LOCATION_PREVIEW;
 		}
 		return message.getContent();
 	}
@@ -151,6 +170,8 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 				.meetAt(metadata.getMeetAt())
 				.price(metadata.getPrice())
 				.placeName(metadata.getPlaceName())
+				.latitude(metadata.getLatitude())
+				.longitude(metadata.getLongitude())
 				.build();
 	}
 
@@ -177,5 +198,13 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 			throw new InvalidChatRoomRequestException(message);
 		}
 		return normalized;
+	}
+
+	private String blankToNull(String value) {
+		if (value == null) {
+			return null;
+		}
+		String normalized = value.trim();
+		return normalized.isBlank() ? null : normalized;
 	}
 }

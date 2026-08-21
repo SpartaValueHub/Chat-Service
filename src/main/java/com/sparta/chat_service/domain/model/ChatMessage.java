@@ -70,6 +70,17 @@ public class ChatMessage {
 				.build();
 	}
 
+	public static ChatMessage createLocation(String roomId, String senderUuid, MessageMetadata metadata) {
+		return ChatMessage.builder()
+				.roomId(roomId)
+				.senderUuid(senderUuid)
+				.messageType(MessageType.LOCATION)
+				.content(null)
+				.metadata(metadata)
+				.createdAt(Instant.now())
+				.build();
+	}
+
 	public static ChatMessage createReservation(
 			String roomId,
 			String senderUuid,

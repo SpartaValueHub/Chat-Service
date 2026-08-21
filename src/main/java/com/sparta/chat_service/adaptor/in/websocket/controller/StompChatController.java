@@ -87,6 +87,8 @@ public class StompChatController {
 						.meetAt(metadata.getMeetAt())
 						.price(metadata.getPrice())
 						.placeName(metadata.getPlaceName())
+						.latitude(metadata.getLatitude())
+						.longitude(metadata.getLongitude())
 						.build())
 				.build();
 	}
@@ -115,6 +117,8 @@ public class StompChatController {
 				.meetAt(metadataDto.getMeetAt())
 				.price(metadataDto.getPrice())
 				.placeName(metadataDto.getPlaceName())
+				.latitude(metadataDto.getLatitude())
+				.longitude(metadataDto.getLongitude())
 				.build();
 	}
 

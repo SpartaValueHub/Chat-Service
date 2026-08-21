@@ -73,6 +73,8 @@ public class ListChatMessagesService implements ListChatMessagesUseCase {
 				.meetAt(metadata.getMeetAt())
 				.price(metadata.getPrice())
 				.placeName(metadata.getPlaceName())
+				.latitude(metadata.getLatitude())
+				.longitude(metadata.getLongitude())
 				.build();
 	}
 

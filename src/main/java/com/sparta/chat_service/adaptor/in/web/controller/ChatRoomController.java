@@ -249,6 +249,8 @@ public class ChatRoomController {
 				.meetAt(metadataDto.getMeetAt())
 				.price(metadataDto.getPrice())
 				.placeName(metadataDto.getPlaceName())
+				.latitude(metadataDto.getLatitude())
+				.longitude(metadataDto.getLongitude())
 				.build();
 	}
 }

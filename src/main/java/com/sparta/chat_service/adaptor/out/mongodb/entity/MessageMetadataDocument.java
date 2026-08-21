@@ -13,33 +13,32 @@ import java.time.Instant;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MessageMetadataDocument {
 
-	// IMAGE: 파일 크기 표기
 	@Field("file_size")
 	private String fileSize;
 
-	// IMAGE: 가로 픽셀
 	@Field("image_width")
 	private Integer imageWidth;
 
-	// IMAGE: 세로 픽셀
 	@Field("image_height")
 	private Integer imageHeight;
 
-	// RESERVATION: 예약 식별자
 	@Field("reservation_id")
 	private String reservationId;
 
-	// RESERVATION: 약속 시각
 	@Field("meet_at")
 	private Instant meetAt;
 
-	// RESERVATION: 거래 금액
 	@Field("price")
 	private Long price;
 
-	// RESERVATION: 만남 장소명
 	@Field("place_name")
 	private String placeName;
+
+	@Field("latitude")
+	private Double latitude;
+
+	@Field("longitude")
+	private Double longitude;
 
 	@Builder
 	private MessageMetadataDocument(
@@ -49,7 +48,9 @@ public class MessageMetadataDocument {
 			String reservationId,
 			Instant meetAt,
 			Long price,
-			String placeName
+			String placeName,
+			Double latitude,
+			Double longitude
 	) {
 		this.fileSize = fileSize;
 		this.imageWidth = imageWidth;
@@ -58,5 +59,7 @@ public class MessageMetadataDocument {
 		this.meetAt = meetAt;
 		this.price = price;
 		this.placeName = placeName;
+		this.latitude = latitude;
+		this.longitude = longitude;
 	}
 }
