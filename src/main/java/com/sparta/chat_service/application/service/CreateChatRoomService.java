@@ -14,7 +14,6 @@ import com.sparta.chat_service.domain.exception.InvalidChatRoomRequestException;
 import com.sparta.chat_service.domain.model.ChatProductPost;
 import com.sparta.chat_service.domain.model.ChatRoom;
 import com.sparta.chat_service.domain.model.ChatUserProfile;
-import com.sparta.chat_service.domain.model.MemberGrade;
 import com.sparta.chat_service.domain.model.Participant;
 import com.sparta.chat_service.domain.model.TradeStatus;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +33,7 @@ public class CreateChatRoomService implements CreateChatRoomUseCase {
 	private final SaveChatRoomPort saveChatRoomPort;
 	// 참여자 프로필 적재 (Member)
 	private final ResolveChatUserProfileUseCase resolveChatUserProfileUseCase;
-	// 판매자 닉네임·등급 스냅샷 저장
+	// 판매자 닉네임 스냅샷 저장
 	private final SaveChatUserProfilePort saveChatUserProfilePort;
 	// 상품 게시글 스냅샷 저장
 	private final SaveChatProductPostPort saveChatProductPostPort;
@@ -54,7 +53,6 @@ public class CreateChatRoomService implements CreateChatRoomUseCase {
 		Long price = requirePrice(command.getPrice());
 		TradeStatus tradeStatus = requireTradeStatus(command.getTradeStatus());
 		String sellerNickname = requireText(command.getSellerNickname(), "sellerNickname은 필수입니다.");
-		MemberGrade sellerMemberGrade = requireMemberGrade(command.getSellerMemberGrade());
 
 		if (buyerUuid.equals(sellerUuid)) {
 			throw new CannotChatWithSelfException();
@@ -62,7 +60,7 @@ public class CreateChatRoomService implements CreateChatRoomUseCase {
 
 		resolveChatUserProfileUseCase.resolve(buyerUuid);
 		ChatUserProfile sellerProfile = resolveChatUserProfileUseCase.resolve(sellerUuid);
-		saveChatUserProfilePort.save(sellerProfile.applySellerSnapshot(sellerNickname, sellerMemberGrade));
+		saveChatUserProfilePort.save(sellerProfile.applySellerSnapshot(sellerNickname));
 		saveChatProductPostPort.save(ChatProductPost.create(
 				productPostUuid,
 				productPostImageUrl,
@@ -131,12 +129,5 @@ public class CreateChatRoomService implements CreateChatRoomUseCase {
 			throw new InvalidChatRoomRequestException("tradeStatus는 필수입니다.");
 		}
 		return tradeStatus;
-	}
-
-	private MemberGrade requireMemberGrade(MemberGrade memberGrade) {
-		if (memberGrade == null) {
-			throw new InvalidChatRoomRequestException("sellerMemberGrade는 필수입니다.");
-		}
-		return memberGrade;
 	}
 }

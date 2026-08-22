@@ -86,8 +86,8 @@ public class ChatUserProfile {
 				.build();
 	}
 
-	// 상품 게시글 상세에서 온 판매자 닉네임·등급만 반영. 프로필 이미지는 유지
-	public ChatUserProfile applySellerSnapshot(String nickname, MemberGrade memberGrade) {
-		return update(nickname, this.profileImageUrl, memberGrade);
+	// 상품 게시글 상세에서 온 판매자 닉네임만 반영. 프로필 이미지·등급은 유지
+	public ChatUserProfile applySellerSnapshot(String nickname) {
+		return update(nickname, this.profileImageUrl);
 	}
 }

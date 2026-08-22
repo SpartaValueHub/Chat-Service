@@ -13,7 +13,6 @@ import com.sparta.chat_service.domain.exception.InvalidChatRoomRequestException;
 import com.sparta.chat_service.domain.model.ChatProductPost;
 import com.sparta.chat_service.domain.model.ChatRoom;
 import com.sparta.chat_service.domain.model.ChatUserProfile;
-import com.sparta.chat_service.domain.model.MemberGrade;
 import com.sparta.chat_service.domain.model.TradeStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,7 +74,6 @@ class CreateChatRoomServiceTest {
 
 		ChatUserProfile seller = profileStore.profiles.get(SELLER_UUID);
 		assertEquals("판매자닉", seller.getNickname());
-		assertEquals(MemberGrade.GOLD, seller.getMemberGrade());
 		assertEquals("/images/default-profile.png", seller.getProfileImageUrl());
 	}
 
@@ -133,7 +131,6 @@ class CreateChatRoomServiceTest {
 				.price(null)
 				.tradeStatus(TradeStatus.SELLING)
 				.sellerNickname("판매자닉")
-				.sellerMemberGrade(MemberGrade.GOLD)
 				.build();
 
 		assertThrows(InvalidChatRoomRequestException.class, () -> service.create(command));
@@ -149,7 +146,6 @@ class CreateChatRoomServiceTest {
 				.price(350000L)
 				.tradeStatus(TradeStatus.SELLING)
 				.sellerNickname("판매자닉")
-				.sellerMemberGrade(MemberGrade.GOLD)
 				.build();
 	}
 

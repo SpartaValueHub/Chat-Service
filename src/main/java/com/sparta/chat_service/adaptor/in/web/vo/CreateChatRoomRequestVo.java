@@ -1,7 +1,6 @@
 package com.sparta.chat_service.adaptor.in.web.vo;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.sparta.chat_service.domain.model.MemberGrade;
 import com.sparta.chat_service.domain.model.TradeStatus;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,6 +25,4 @@ public class CreateChatRoomRequestVo {
 	private TradeStatus tradeStatus;
 	// 판매자 닉네임
 	private String sellerNickname;
-	// 판매자 회원 등급
-	private MemberGrade sellerMemberGrade;
 }

@@ -34,7 +34,6 @@ Body
 | price             | number | O    | 가격                                                          |
 | tradeStatus       | string | O    | 거래 상태. `SELLING` `RESERVED` `SOLD_OUT` |
 | sellerNickname      | string | O    | 상품 게시글 상세의 판매자 닉네임 |
-| sellerMemberGrade   | string | O    | 판매자 회원 등급. `BRONZE` `SILVER` `GOLD` `PLATINUM` `DIAMOND` |
 
 ```json
 {
@@ -44,8 +43,7 @@ Body
   "productPostName": "중고 노트북",
   "price": 350000,
   "tradeStatus": "SELLING",
-  "sellerNickname": "판매자닉",
-  "sellerMemberGrade": "GOLD"
+  "sellerNickname": "판매자닉"
 }
 ```
 
