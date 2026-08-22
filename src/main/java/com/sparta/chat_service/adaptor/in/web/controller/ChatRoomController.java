@@ -114,7 +114,6 @@ public class ChatRoomController {
 				.price(requestVo.getPrice())
 				.tradeStatus(requestVo.getTradeStatus())
 				.sellerNickname(requestVo.getSellerNickname())
-				.sellerMemberGrade(requestVo.getSellerMemberGrade())
 				.build();
 	}
 
