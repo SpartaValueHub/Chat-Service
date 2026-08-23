@@ -182,6 +182,11 @@ class CreateChatRoomServiceTest {
 		}
 
 		@Override
+		public List<ChatRoom> findByParticipantAndProductPost(String memberUuid, String productPostUuid) {
+			return List.of();
+		}
+
+		@Override
 		public ChatRoom save(ChatRoom chatRoom) {
 			saveCount.incrementAndGet();
 			ChatRoom stored = ChatRoom.restore(

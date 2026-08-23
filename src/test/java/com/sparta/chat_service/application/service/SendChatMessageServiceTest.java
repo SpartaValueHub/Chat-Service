@@ -249,6 +249,11 @@ class SendChatMessageServiceTest {
 		}
 
 		@Override
+		public List<ChatRoom> findByParticipantAndProductPost(String memberUuid, String productPostUuid) {
+			return List.of();
+		}
+
+		@Override
 		public void updateLastMessage(String roomId, LastMessage lastMessage) {
 			this.lastMessage = lastMessage;
 		}

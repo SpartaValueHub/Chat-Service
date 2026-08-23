@@ -124,6 +124,11 @@ class GetTotalUnreadCountServiceTest {
 							.anyMatch(participant -> memberUuid.equals(participant.getMemberUuid())))
 					.toList();
 		}
+
+		@Override
+		public List<ChatRoom> findByParticipantAndProductPost(String memberUuid, String productPostUuid) {
+			return List.of();
+		}
 	}
 
 	private static final class InMemoryChatMessageStore implements LoadChatMessagePort {

@@ -6,4 +6,6 @@ import com.sparta.chat_service.application.port.in.dto.ChatRoomListResultDto;
 public interface ListChatRoomsUseCase {
 
 	ChatRoomListResultDto list(String memberUuid);
+
+	ChatRoomListResultDto listByProductPost(String memberUuid, String productPostUuid);
 }

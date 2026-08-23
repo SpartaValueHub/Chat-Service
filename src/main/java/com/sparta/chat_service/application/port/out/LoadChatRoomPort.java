@@ -17,4 +17,6 @@ public interface LoadChatRoomPort {
 	Optional<ChatRoom> findById(String roomId);
 
 	List<ChatRoom> findByParticipant(String memberUuid);
+
+	List<ChatRoom> findByParticipantAndProductPost(String memberUuid, String productPostUuid);
 }

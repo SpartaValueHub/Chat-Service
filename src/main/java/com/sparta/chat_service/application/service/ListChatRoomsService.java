@@ -10,6 +10,7 @@ import com.sparta.chat_service.application.port.out.LoadChatMessagePort;
 import com.sparta.chat_service.application.port.out.LoadChatProductPostPort;
 import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
 import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
+import com.sparta.chat_service.domain.exception.InvalidChatRoomRequestException;
 import com.sparta.chat_service.domain.model.ChatProductPost;
 import com.sparta.chat_service.domain.model.ChatRoom;
 import com.sparta.chat_service.domain.model.LastMessage;
@@ -34,9 +35,23 @@ public class ListChatRoomsService implements ListChatRoomsUseCase {
 	@Override
 	public ChatRoomListResultDto list(String memberUuid) {
 		String viewerUuid = requireMemberUuid(memberUuid);
-		List<ChatRoom> rooms = sortForList(loadChatRoomPort.findByParticipant(viewerUuid));
-		Map<String, ChatProductPost> productPosts = loadProductPosts(rooms);
-		List<ChatRoomListItemDto> items = rooms.stream()
+		return toResult(viewerUuid, loadChatRoomPort.findByParticipant(viewerUuid));
+	}
+
+	@Override
+	public ChatRoomListResultDto listByProductPost(String memberUuid, String productPostUuid) {
+		String viewerUuid = requireMemberUuid(memberUuid);
+		String normalizedProductPostUuid = requireProductPostUuid(productPostUuid);
+		return toResult(
+				viewerUuid,
+				loadChatRoomPort.findByParticipantAndProductPost(viewerUuid, normalizedProductPostUuid)
+		);
+	}
+
+	private ChatRoomListResultDto toResult(String viewerUuid, List<ChatRoom> rooms) {
+		List<ChatRoom> sorted = sortForList(rooms);
+		Map<String, ChatProductPost> productPosts = loadProductPosts(sorted);
+		List<ChatRoomListItemDto> items = sorted.stream()
 				.map(room -> toItem(room, viewerUuid, productPosts))
 				.toList();
 		return ChatRoomListResultDto.builder()
@@ -117,6 +132,14 @@ public class ListChatRoomsService implements ListChatRoomsUseCase {
 		String normalized = memberUuid == null ? "" : memberUuid.trim();
 		if (normalized.isBlank()) {
 			throw new ChatAuthMissingException();
+		}
+		return normalized;
+	}
+
+	private String requireProductPostUuid(String productPostUuid) {
+		String normalized = productPostUuid == null ? "" : productPostUuid.trim();
+		if (normalized.isBlank()) {
+			throw new InvalidChatRoomRequestException("productPostUuid는 필수입니다.");
 		}
 		return normalized;
 	}

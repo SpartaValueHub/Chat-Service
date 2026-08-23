@@ -61,6 +61,15 @@ public class ChatRoomController {
 		return ResponseEntity.ok(toListVo(resultDto));
 	}
 
+	@GetMapping("/product-posts/{productPostUuid}/rooms")
+	public ResponseEntity<ChatRoomListResponseVo> listChatRoomsByProductPost(
+			@RequestHeader(value = MEMBER_UUID_HEADER, required = false) String memberUuid,
+			@PathVariable String productPostUuid
+	) {
+		ChatRoomListResultDto resultDto = listChatRoomsUseCase.listByProductPost(memberUuid, productPostUuid);
+		return ResponseEntity.ok(toListVo(resultDto));
+	}
+
 	@GetMapping("/unread-count")
 	public ResponseEntity<TotalUnreadCountResponseVo> getTotalUnreadCount(
 			@RequestHeader(value = MEMBER_UUID_HEADER, required = false) String memberUuid

@@ -63,6 +63,19 @@ public class ChatRoomMongoAdapter implements LoadChatRoomPort, SaveChatRoomPort,
 	@Override
 	public List<ChatRoom> findByParticipant(String memberUuid) {
 		Query query = Query.query(Criteria.where("participants.member_uuid").is(memberUuid));
+		return findRooms(query);
+	}
+
+	@Override
+	public List<ChatRoom> findByParticipantAndProductPost(String memberUuid, String productPostUuid) {
+		Query query = Query.query(
+				Criteria.where("product_post_uuid").is(productPostUuid)
+						.and("participants.member_uuid").is(memberUuid)
+		);
+		return findRooms(query);
+	}
+
+	private List<ChatRoom> findRooms(Query query) {
 		List<ChatRoomEntity> entities = reactiveMongoTemplate.find(query, ChatRoomEntity.class)
 				.collectList()
 				.block(MONGO_TIMEOUT);
