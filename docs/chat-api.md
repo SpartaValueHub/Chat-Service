@@ -167,6 +167,96 @@ Query·Body 없음. 페이징 없음.
 
 ---
 
+## 상품별 채팅방 목록
+
+### Summary
+
+상품 게시글 상세의 `대화중인 채팅`에서 사용합니다. 해당 상품 UUID로 열린 1:1 방 중, 로그인한 회원이 참여한 방만 반환합니다. 판매자면 그 상품의 모든 방이 나옵니다. 응답 필드는 채팅방 목록과 같습니다.
+
+`unreadCount`·정렬·상품 스냅샷 누락 시 동작은 `GET /api/v1/chat/rooms`와 동일합니다.
+
+### Method · Path
+
+`GET /api/v1/chat/product-posts/{productPostUuid}/rooms`
+
+### Auth
+
+필요 — Gateway JWT. Gateway가 `X-Member-Uuid` 헤더를 주입합니다.
+
+### Request
+
+Header
+
+| 필드          | 타입   | 필수 | 제약      |
+| ------------- | ------ | ---- | --------- |
+| X-Member-Uuid | string | O    | 회원 UUID |
+
+Path
+
+| 필드             | 타입   | 필수 | 제약          |
+| ---------------- | ------ | ---- | ------------- |
+| productPostUuid  | string | O    | 상품 게시글 UUID |
+
+Query·Body 없음. 페이징 없음.
+
+### Response
+
+`200`
+
+| 필드 | 타입 |
+| ---- | ---- |
+| rooms | array |
+| rooms[].roomId | string |
+| rooms[].productPost.productPostUuid | string |
+| rooms[].productPost.productPostImageUrl | string |
+| rooms[].productPost.productPostName | string |
+| rooms[].productPost.price | number |
+| rooms[].productPost.tradeStatus | string |
+| rooms[].counterpart.memberUuid | string |
+| rooms[].lastMessage | object \| null |
+| rooms[].lastMessage.content | string |
+| rooms[].lastMessage.createdAt | string (ISO-8601) |
+| rooms[].unreadCount | number |
+| rooms[].updatedAt | string (ISO-8601) |
+
+정렬: `lastMessage.createdAt` 내림차순, 없으면 `updatedAt` 내림차순.  
+해당 상품에 참여한 방이 없으면 `rooms`는 빈 배열입니다. 버튼의 `대화중인 채팅 N`은 `rooms.length`입니다.
+
+```json
+{
+  "rooms": [
+    {
+      "roomId": "67a1c2d3e4f5a6b7c8d9e0f1",
+      "productPost": {
+        "productPostUuid": "11111111-1111-4111-8111-111111111111",
+        "productPostImageUrl": "https://cdn.example.com/products/111.png",
+        "productPostName": "중고 노트북",
+        "price": 350000,
+        "tradeStatus": "SELLING"
+      },
+      "counterpart": {
+        "memberUuid": "22222222-2222-4222-8222-222222222222"
+      },
+      "lastMessage": {
+        "content": "안녕하세요",
+        "createdAt": "2026-08-19T04:00:00Z"
+      },
+      "unreadCount": 2,
+      "updatedAt": "2026-08-19T04:00:00Z"
+    }
+  ]
+}
+```
+
+### Errors
+
+| status | code              | 의미                       |
+| ------ | ----------------- | -------------------------- |
+| 401    | CHAT_AUTH_MISSING | X-Member-Uuid 헤더 없음    |
+| 400    | INVALID_REQUEST   | productPostUuid 없음       |
+
+---
+
 ## 미읽음 총합
 
 ### Summary

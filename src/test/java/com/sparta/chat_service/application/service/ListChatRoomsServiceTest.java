@@ -6,6 +6,7 @@ import com.sparta.chat_service.application.port.out.LoadChatMessagePort;
 import com.sparta.chat_service.application.port.out.LoadChatProductPostPort;
 import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
 import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
+import com.sparta.chat_service.domain.exception.InvalidChatRoomRequestException;
 import com.sparta.chat_service.domain.model.ChatMessage;
 import com.sparta.chat_service.domain.model.ChatProductPost;
 import com.sparta.chat_service.domain.model.ChatRoom;
@@ -159,6 +160,50 @@ class ListChatRoomsServiceTest {
 		assertEquals(1, service.list(VIEWER_UUID).getRooms().get(0).getUnreadCount());
 	}
 
+	@Test
+	void listByProductPost_rejectsMissingMemberHeader() {
+		assertThrows(ChatAuthMissingException.class, () -> service.listByProductPost("  ", PRODUCT_POST_UUID));
+	}
+
+	@Test
+	void listByProductPost_rejectsBlankProductPostUuid() {
+		assertThrows(InvalidChatRoomRequestException.class, () -> service.listByProductPost(SELLER_UUID, "  "));
+	}
+
+	@Test
+	void listByProductPost_returnsEmptyWhenViewerHasNoRoomForProduct() {
+		roomStore.add(room("room-other", OTHER_PRODUCT_POST_UUID, VIEWER_UUID, OTHER_SELLER_UUID, null, Instant.parse("2026-08-19T04:00:00Z")));
+
+		ChatRoomListResultDto result = service.listByProductPost(VIEWER_UUID, PRODUCT_POST_UUID);
+
+		assertTrue(result.getRooms().isEmpty());
+	}
+
+	@Test
+	void listByProductPost_returnsOnlyRoomsForProductThatViewerJoined() {
+		Instant older = Instant.parse("2026-08-19T01:00:00Z");
+		Instant newer = Instant.parse("2026-08-19T03:00:00Z");
+		roomStore.add(room("room-buyer-1", PRODUCT_POST_UUID, VIEWER_UUID, SELLER_UUID, LastMessage.create("이전", older), older));
+		roomStore.add(room("room-other-product", OTHER_PRODUCT_POST_UUID, VIEWER_UUID, OTHER_SELLER_UUID, LastMessage.create("다른 상품", newer), newer));
+		roomStore.add(room("room-buyer-2", PRODUCT_POST_UUID, OTHER_SELLER_UUID, SELLER_UUID, LastMessage.create("최근", newer), newer));
+		productPostStore.add(ChatProductPost.create(
+				PRODUCT_POST_UUID,
+				"https://cdn.example.com/products/111.png",
+				"중고 노트북",
+				350000L,
+				TradeStatus.SELLING
+		));
+
+		List<ChatRoomListItemDto> rooms = service.listByProductPost(SELLER_UUID, PRODUCT_POST_UUID).getRooms();
+
+		assertEquals(2, rooms.size());
+		assertEquals("room-buyer-2", rooms.get(0).getRoomId());
+		assertEquals("room-buyer-1", rooms.get(1).getRoomId());
+		assertEquals(VIEWER_UUID, rooms.get(1).getCounterpart().getMemberUuid());
+		assertEquals(OTHER_SELLER_UUID, rooms.get(0).getCounterpart().getMemberUuid());
+		assertEquals("중고 노트북", rooms.get(0).getProductPost().getProductPostName());
+	}
+
 	private ChatRoom room(
 			String id,
 			String productPostUuid,
@@ -222,9 +267,21 @@ class ListChatRoomsServiceTest {
 		@Override
 		public List<ChatRoom> findByParticipant(String memberUuid) {
 			return rooms.stream()
-					.filter(room -> room.getParticipants().stream()
-							.anyMatch(participant -> memberUuid.equals(participant.getMemberUuid())))
+					.filter(room -> hasMember(room, memberUuid))
 					.toList();
+		}
+
+		@Override
+		public List<ChatRoom> findByParticipantAndProductPost(String memberUuid, String productPostUuid) {
+			return rooms.stream()
+					.filter(room -> productPostUuid.equals(room.getProductPostUuid()))
+					.filter(room -> hasMember(room, memberUuid))
+					.toList();
+		}
+
+		private boolean hasMember(ChatRoom room, String memberUuid) {
+			return room.getParticipants().stream()
+					.anyMatch(participant -> memberUuid.equals(participant.getMemberUuid()));
 		}
 	}
 

@@ -147,6 +147,11 @@ class ListChatMessagesServiceTest {
 		public List<ChatRoom> findByParticipant(String memberUuid) {
 			return List.of();
 		}
+
+		@Override
+		public List<ChatRoom> findByParticipantAndProductPost(String memberUuid, String productPostUuid) {
+			return List.of();
+		}
 	}
 
 	private static final class InMemoryChatMessageStore implements LoadChatMessagePort {
