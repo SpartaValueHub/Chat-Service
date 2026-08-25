@@ -65,7 +65,8 @@ class SendChatMessageServiceTest {
 				roomStore,
 				presence,
 				messageStore,
-				listPublisher
+				listPublisher,
+				new ChatImageUrlResolver("https://cdn.example.com")
 		);
 		roomStore.add(room());
 	}
@@ -150,6 +151,29 @@ class SendChatMessageServiceTest {
 		assertEquals("2.4MB", result.getMetadata().getFileSize());
 		assertEquals("사진이 공유 되었습니다.", roomStore.lastMessage.getContent());
 		assertEquals("사진이 공유 되었습니다.", listPublisher.preview(SENDER_UUID).getLastMessage().getContent());
+	}
+
+	@Test
+	void send_savesImageS3KeyAndReturnsCloudFrontUrl() {
+		ChatMessageMetadataDto metadata = ChatMessageMetadataDto.builder()
+				.fileSize("2.4MB")
+				.imageWidth(800)
+				.imageHeight(600)
+				.build();
+		String s3Key = "chat/2026/08/25/7c9e6679-7425-40de-944b-e07fc1f90ae7.jpg";
+
+		ChatMessageItemDto result = service.send(command(SENDER_UUID, s3Key, MessageType.IMAGE, metadata));
+
+		assertEquals(MessageType.IMAGE, result.getMessageType());
+		assertEquals("https://cdn.example.com/" + s3Key, result.getContent());
+		assertEquals(s3Key, messageStore.messages.values().iterator().next().getContent());
+	}
+
+	@Test
+	void send_rejectsInvalidImageKey() {
+		assertThrows(InvalidChatRoomRequestException.class,
+				() -> service.send(command(SENDER_UUID, "chat/../secret.jpg", MessageType.IMAGE, null)));
+		assertEquals(0, listPublisher.published.size());
 	}
 
 	@Test

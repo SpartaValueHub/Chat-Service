@@ -37,7 +37,7 @@ public class ChatMessageEntity {
 	@Field("message_type")
 	private String messageType;
 
-	// 본문 또는 이미지 URL
+	// 본문 또는 이미지 s3Key (레거시는 URL)
 	@Field("content")
 	private String content;
 

@@ -16,6 +16,7 @@ import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
 import com.sparta.chat_service.domain.exception.ChatRoomAccessDeniedException;
 import com.sparta.chat_service.domain.exception.ChatRoomNotFoundException;
 import com.sparta.chat_service.domain.exception.InvalidChatRoomRequestException;
+import com.sparta.chat_service.domain.model.ChatImageKey;
 import com.sparta.chat_service.domain.model.ChatMessage;
 import com.sparta.chat_service.domain.model.ChatRoom;
 import com.sparta.chat_service.domain.model.LastMessage;
@@ -40,6 +41,7 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 	private final ChatRoomPresencePort chatRoomPresencePort;
 	private final LoadChatMessagePort loadChatMessagePort;
 	private final PublishChatListPreviewPort publishChatListPreviewPort;
+	private final ChatImageUrlResolver chatImageUrlResolver;
 
 	@Override
 	public ChatMessageItemDto send(SendChatMessageCommandDto command) {
@@ -97,7 +99,12 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 			return ChatMessage.createText(roomId, senderUuid, content);
 		}
 		if (messageType == MessageType.IMAGE) {
-			return ChatMessage.createImage(roomId, senderUuid, content, toImageMetadata(command.getMetadata()));
+			return ChatMessage.createImage(
+					roomId,
+					senderUuid,
+					requireImageContent(content),
+					toImageMetadata(command.getMetadata())
+			);
 		}
 		throw new InvalidChatRoomRequestException("지원하지 않는 messageType입니다.");
 	}
@@ -152,7 +159,7 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 				.messageId(message.getId())
 				.senderUuid(message.getSenderUuid())
 				.messageType(message.getMessageType())
-				.content(message.getContent())
+				.content(chatImageUrlResolver.toResponseContent(message.getMessageType(), message.getContent()))
 				.metadata(toMetadata(message.getMetadata()))
 				.createdAt(message.getCreatedAt())
 				.build();
@@ -190,6 +197,13 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 			throw new ChatAuthMissingException();
 		}
 		return normalized;
+	}
+
+	private String requireImageContent(String content) {
+		if (ChatImageKey.isHttpUrl(content) || ChatImageKey.isValidS3Key(content)) {
+			return content.trim();
+		}
+		throw new InvalidChatRoomRequestException("이미지 키가 올바르지 않습니다. Presigned API의 s3Key를 사용하세요.");
 	}
 
 	private String requireText(String value, String message) {

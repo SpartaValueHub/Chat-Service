@@ -3,6 +3,7 @@ package com.sparta.chat_service.adaptor.in.web;
 import com.sparta.chat_service.adaptor.in.web.vo.ErrorResponseVo;
 import com.sparta.chat_service.domain.exception.CannotChatWithSelfException;
 import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
+import com.sparta.chat_service.domain.exception.ChatImageUploadUnavailableException;
 import com.sparta.chat_service.domain.exception.ChatRoomAccessDeniedException;
 import com.sparta.chat_service.domain.exception.ChatRoomNotFoundException;
 import com.sparta.chat_service.domain.exception.ChatUserProfileNotFoundException;
@@ -83,6 +84,14 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(MemberProfileUnavailableException.class)
 	public ResponseEntity<ErrorResponseVo> handleMemberUnavailable(
 			MemberProfileUnavailableException exception,
+			HttpServletRequest request
+	) {
+		return error(HttpStatus.SERVICE_UNAVAILABLE, exception.getCode(), exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(ChatImageUploadUnavailableException.class)
+	public ResponseEntity<ErrorResponseVo> handleImageUploadUnavailable(
+			ChatImageUploadUnavailableException exception,
 			HttpServletRequest request
 	) {
 		return error(HttpStatus.SERVICE_UNAVAILABLE, exception.getCode(), exception.getMessage(), request);

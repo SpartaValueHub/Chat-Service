@@ -27,6 +27,7 @@ public class ListChatMessagesService implements ListChatMessagesUseCase {
 
 	private final LoadChatRoomPort loadChatRoomPort;
 	private final LoadChatMessagePort loadChatMessagePort;
+	private final ChatImageUrlResolver chatImageUrlResolver;
 
 	@Override
 	public ChatMessageListResultDto list(String memberUuid, String roomId, String beforeMessageId, Integer limit) {
@@ -55,7 +56,7 @@ public class ListChatMessagesService implements ListChatMessagesUseCase {
 				.messageId(message.getId())
 				.senderUuid(message.getSenderUuid())
 				.messageType(message.getMessageType())
-				.content(message.getContent())
+				.content(chatImageUrlResolver.toResponseContent(message.getMessageType(), message.getContent()))
 				.metadata(toMetadata(message.getMetadata()))
 				.createdAt(message.getCreatedAt())
 				.build();
