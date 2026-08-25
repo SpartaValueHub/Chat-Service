@@ -33,3 +33,11 @@ springdoc:
     path: /swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
+
+app:
+  media:
+    s3-bucket: ${S3_BUCKET:}
+    cloudfront-base-url: ${CLOUDFRONT_BASE_URL:}
+    aws-region: ${AWS_REGION:ap-northeast-2}
+    max-file-size-bytes: 5242880
+    presign-expire-seconds: 300

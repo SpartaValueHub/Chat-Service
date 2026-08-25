@@ -17,7 +17,7 @@ public class ChatMessage {
 	private final String senderUuid;
 	// 메시지 유형
 	private final MessageType messageType;
-	// 본문 (TEXT/시스템문구) 또는 이미지 URL
+	// 본문 (TEXT/시스템문구) 또는 이미지 s3Key (레거시는 URL)
 	private final String content;
 	// 타입별 부가 정보 (TEXT는 null)
 	private final MessageMetadata metadata;

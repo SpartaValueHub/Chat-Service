@@ -397,6 +397,95 @@ Path
 
 ---
 
+## 채팅 이미지 Presigned URL
+
+### Summary
+
+채팅 이미지를 S3에 올리기 위한 Presigned PUT URL을 발급합니다. Chat은 파일을 받지 않습니다. 클라이언트가 `uploadUrl`로 S3에 직접 PUT한 뒤, STOMP IMAGE 메시지의 `content`에 `s3Key`를 넣습니다.
+
+조회는 별도 GET이 없습니다. 이력 REST·STOMP 브로드캐스트의 IMAGE `content`가 CloudFront URL입니다.
+
+수정·삭제는 없습니다.
+
+### Method · Path
+
+`POST /api/v1/chat/rooms/{roomId}/images/presigned-url`
+
+### Auth
+
+필요 — Gateway JWT. Gateway가 `X-Member-Uuid` 헤더를 주입합니다.
+
+### Request
+
+Header
+
+| 필드          | 타입   | 필수 | 제약      |
+| ------------- | ------ | ---- | --------- |
+| X-Member-Uuid | string | O    | 회원 UUID |
+
+Path
+
+| 필드   | 타입   | 필수 | 제약          |
+| ------ | ------ | ---- | ------------- |
+| roomId | string | O    | Mongo 방 문서 ID |
+
+Body
+
+| 필드        | 타입   | 필수 | 제약 |
+| ----------- | ------ | ---- | ---- |
+| contentType | string | O    | `image/jpeg` `image/png` `image/webp` `image/gif` |
+| fileSize    | number | O    | 바이트. 1 이상 5,242,880 (5MB) 이하 |
+
+```json
+{
+  "contentType": "image/jpeg",
+  "fileSize": 2457600
+}
+```
+
+### Response
+
+`200`
+
+| 필드 | 타입 |
+| ---- | ---- |
+| uploadUrl | string |
+| method | string |
+| headers | object |
+| headers.Content-Type | string |
+| s3Key | string |
+| publicUrl | string |
+| expiresInSeconds | number |
+
+`s3Key` 형식: `chat/{yyyy}/{MM}/{dd}/{uuid}.{ext}`  
+`publicUrl`은 `CLOUDFRONT_BASE_URL` + `s3Key`입니다.  
+`uploadUrl`로 PUT할 때 `headers`의 `Content-Type`을 그대로 넣어야 합니다. Gateway를 타지 않습니다.
+
+```json
+{
+  "uploadUrl": "https://bucket.s3.ap-northeast-2.amazonaws.com/chat/2026/08/25/7c9e6679-7425-40de-944b-e07fc1f90ae7.jpg?X-Amz-Algorithm=...",
+  "method": "PUT",
+  "headers": {
+    "Content-Type": "image/jpeg"
+  },
+  "s3Key": "chat/2026/08/25/7c9e6679-7425-40de-944b-e07fc1f90ae7.jpg",
+  "publicUrl": "https://dxxxx.cloudfront.net/chat/2026/08/25/7c9e6679-7425-40de-944b-e07fc1f90ae7.jpg",
+  "expiresInSeconds": 300
+}
+```
+
+### Errors
+
+| status | code | 의미 |
+| ------ | ---- | ---- |
+| 401 | CHAT_AUTH_MISSING | X-Member-Uuid 헤더 없음 |
+| 400 | INVALID_REQUEST | contentType/fileSize 오류 |
+| 404 | CHAT_ROOM_NOT_FOUND | 채팅방 없음 |
+| 403 | CHAT_ROOM_ACCESS_DENIED | 참여자가 아님 |
+| 503 | CHAT_IMAGE_UPLOAD_UNAVAILABLE | S3 Presigned 발급 실패 |
+
+---
+
 ## 채팅방 메시지 이력
 
 ### Summary
@@ -457,7 +546,7 @@ Query
 | messages[].metadata.longitude | number |
 | messages[].createdAt | string (ISO-8601) |
 
-`messageType`: `TEXT` `IMAGE` `LOCATION` `RESERVATION`. TEXT는 `metadata`가 `null`입니다. LOCATION의 `content`는 `null`입니다.
+`messageType`: `TEXT` `IMAGE` `LOCATION` `RESERVATION`. TEXT는 `metadata`가 `null`입니다. LOCATION의 `content`는 `null`입니다. IMAGE의 `content`는 CloudFront URL입니다. DB에는 `s3Key`를 저장합니다.
 
 ```json
 {
@@ -469,6 +558,24 @@ Query
       "content": "안녕하세요",
       "metadata": null,
       "createdAt": "2026-08-19T01:00:00Z"
+    },
+    {
+      "messageId": "67b1c2d3e4f5a6b7c8d9e0f4",
+      "senderUuid": "22222222-2222-4222-8222-222222222222",
+      "messageType": "IMAGE",
+      "content": "https://dxxxx.cloudfront.net/chat/2026/08/25/7c9e6679-7425-40de-944b-e07fc1f90ae7.jpg",
+      "metadata": {
+        "fileSize": "2.4MB",
+        "imageWidth": 800,
+        "imageHeight": 600,
+        "reservationId": null,
+        "meetAt": null,
+        "price": null,
+        "placeName": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "createdAt": "2026-08-19T01:30:00Z"
     },
     {
       "messageId": "67b1c2d3e4f5a6b7c8d9e0f2",
@@ -537,7 +644,7 @@ STOMP prefix
 | 필드 | 타입 | 필수 | 제약 |
 |------|------|------|------|
 | messageType | string | X | 기본 `TEXT`. 이 단계 `TEXT` `IMAGE` `LOCATION` |
-| content | string | 타입별 | TEXT=본문, IMAGE=이미지 URL. LOCATION은 null |
+| content | string | 타입별 | TEXT=본문, IMAGE=s3Key. LOCATION은 null |
 | metadata | object | 타입별 | IMAGE=용량·가로·세로. LOCATION=위도·경도·장소명(선택). TEXT는 null |
 
 ```json
@@ -548,12 +655,12 @@ STOMP prefix
 }
 ```
 
-이미지 (업로드는 다른 서비스, Chat은 URL만)
+이미지 (먼저 Presigned PUT으로 S3에 올린 뒤 `s3Key`를 넣습니다. 브로드캐스트 `content`는 CloudFront URL)
 
 ```json
 {
   "messageType": "IMAGE",
-  "content": "https://cdn.example.com/chat/bag.png",
+  "content": "chat/2026/08/25/7c9e6679-7425-40de-944b-e07fc1f90ae7.jpg",
   "metadata": {
     "fileSize": "2.4MB",
     "imageWidth": 800,

@@ -43,7 +43,7 @@ class ListChatMessagesServiceTest {
 	void setUp() {
 		roomStore = new InMemoryChatRoomStore();
 		messageStore = new InMemoryChatMessageStore();
-		service = new ListChatMessagesService(roomStore, messageStore);
+		service = new ListChatMessagesService(roomStore, messageStore, new ChatImageUrlResolver("https://cdn.example.com"));
 		roomStore.add(room());
 	}
 
@@ -101,6 +101,28 @@ class ListChatMessagesServiceTest {
 	@Test
 	void list_rejectsInvalidLimit() {
 		assertThrows(InvalidChatRoomRequestException.class, () -> service.list(VIEWER_UUID, ROOM_ID, null, 0));
+	}
+
+	@Test
+	void list_resolvesImageS3KeyToCloudFrontUrl() {
+		messageStore.add(ChatMessage.restore(
+				"m-img",
+				ROOM_ID,
+				VIEWER_UUID,
+				MessageType.IMAGE,
+				"chat/2026/08/25/7c9e6679-7425-40de-944b-e07fc1f90ae7.jpg",
+				null,
+				Instant.parse("2026-08-19T01:00:00Z")
+		));
+
+		List<ChatMessageItemDto> messages = service.list(VIEWER_UUID, ROOM_ID, null, null).getMessages();
+
+		assertEquals(1, messages.size());
+		assertEquals(MessageType.IMAGE, messages.get(0).getMessageType());
+		assertEquals(
+				"https://cdn.example.com/chat/2026/08/25/7c9e6679-7425-40de-944b-e07fc1f90ae7.jpg",
+				messages.get(0).getContent()
+		);
 	}
 
 	private ChatRoom room() {
