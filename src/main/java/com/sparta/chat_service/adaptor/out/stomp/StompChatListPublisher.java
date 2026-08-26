@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
-// 해당 회원 개인 큐로 목록 lastMessage·unreadCount 패치
+// 해당 회원 개인 큐로 목록 lastMessage·unreadCount·상품 스냅샷 패치
 @Component
 @RequiredArgsConstructor
 public class StompChatListPublisher implements PublishChatListPreviewPort {
@@ -35,6 +35,20 @@ public class StompChatListPublisher implements PublishChatListPreviewPort {
 						.build())
 				.unreadCount(preview.getUnreadCount())
 				.updatedAt(SeoulDateTimes.toSeoul(preview.getUpdatedAt()))
+				.productPost(toProductPost(preview.getProductPost()))
+				.build();
+	}
+
+	private ChatListPreviewVo.ProductPost toProductPost(ChatListPreviewDto.ProductPost productPost) {
+		if (productPost == null) {
+			return null;
+		}
+		return ChatListPreviewVo.ProductPost.builder()
+				.productPostUuid(productPost.getProductPostUuid())
+				.productPostImageUrl(productPost.getProductPostImageUrl())
+				.productPostName(productPost.getProductPostName())
+				.price(productPost.getPrice())
+				.tradeStatus(productPost.getTradeStatus())
 				.build();
 	}
 }
