@@ -1,5 +1,7 @@
 # 채팅방 API
 
+응답의 시각 필드(`createdAt`, `updatedAt`, `meetAt`, `timestamp`)는 `Asia/Seoul` 오프셋(`+09:00`) ISO-8601 문자열입니다. 저장은 UTC Instant입니다.
+
 ## 채팅방 생성
 
 ### Summary
@@ -126,9 +128,9 @@ Query·Body 없음. 페이징 없음.
 | rooms[].counterpart.memberUuid | string |
 | rooms[].lastMessage | object \| null |
 | rooms[].lastMessage.content | string |
-| rooms[].lastMessage.createdAt | string (ISO-8601) |
+| rooms[].lastMessage.createdAt | string (ISO-8601, Asia/Seoul) |
 | rooms[].unreadCount | number |
-| rooms[].updatedAt | string (ISO-8601) |
+| rooms[].updatedAt | string (ISO-8601, Asia/Seoul) |
 
 정렬: `lastMessage.createdAt` 내림차순, 없으면 `updatedAt` 내림차순.  
 방이 없으면 `rooms`는 빈 배열입니다. 상품 스냅샷이 없으면 상품 필드는 `null`이고 목록 전체는 실패하지 않습니다.
@@ -150,10 +152,10 @@ Query·Body 없음. 페이징 없음.
       },
       "lastMessage": {
         "content": "안녕하세요",
-        "createdAt": "2026-08-19T04:00:00Z"
+        "createdAt": "2026-08-19T13:00:00+09:00"
       },
       "unreadCount": 2,
-      "updatedAt": "2026-08-19T04:00:00Z"
+      "updatedAt": "2026-08-19T13:00:00+09:00"
     }
   ]
 }
@@ -215,9 +217,9 @@ Query·Body 없음. 페이징 없음.
 | rooms[].counterpart.memberUuid | string |
 | rooms[].lastMessage | object \| null |
 | rooms[].lastMessage.content | string |
-| rooms[].lastMessage.createdAt | string (ISO-8601) |
+| rooms[].lastMessage.createdAt | string (ISO-8601, Asia/Seoul) |
 | rooms[].unreadCount | number |
-| rooms[].updatedAt | string (ISO-8601) |
+| rooms[].updatedAt | string (ISO-8601, Asia/Seoul) |
 
 정렬: `lastMessage.createdAt` 내림차순, 없으면 `updatedAt` 내림차순.  
 해당 상품에 참여한 방이 없으면 `rooms`는 빈 배열입니다. 버튼의 `대화중인 채팅 N`은 `rooms.length`입니다.
@@ -239,10 +241,10 @@ Query·Body 없음. 페이징 없음.
       },
       "lastMessage": {
         "content": "안녕하세요",
-        "createdAt": "2026-08-19T04:00:00Z"
+        "createdAt": "2026-08-19T13:00:00+09:00"
       },
       "unreadCount": 2,
-      "updatedAt": "2026-08-19T04:00:00Z"
+      "updatedAt": "2026-08-19T13:00:00+09:00"
     }
   ]
 }
@@ -539,12 +541,12 @@ Query
 | messages[].metadata.imageWidth | number |
 | messages[].metadata.imageHeight | number |
 | messages[].metadata.reservationId | string |
-| messages[].metadata.meetAt | string (ISO-8601) |
+| messages[].metadata.meetAt | string (ISO-8601, Asia/Seoul) |
 | messages[].metadata.price | number |
 | messages[].metadata.placeName | string |
 | messages[].metadata.latitude | number |
 | messages[].metadata.longitude | number |
-| messages[].createdAt | string (ISO-8601) |
+| messages[].createdAt | string (ISO-8601, Asia/Seoul) |
 
 `messageType`: `TEXT` `IMAGE` `LOCATION` `RESERVATION`. TEXT는 `metadata`가 `null`입니다. LOCATION의 `content`는 `null`입니다. IMAGE의 `content`는 CloudFront URL입니다. DB에는 `s3Key`를 저장합니다.
 
@@ -557,7 +559,7 @@ Query
       "messageType": "TEXT",
       "content": "안녕하세요",
       "metadata": null,
-      "createdAt": "2026-08-19T01:00:00Z"
+      "createdAt": "2026-08-19T10:00:00+09:00"
     },
     {
       "messageId": "67b1c2d3e4f5a6b7c8d9e0f4",
@@ -575,7 +577,7 @@ Query
         "latitude": null,
         "longitude": null
       },
-      "createdAt": "2026-08-19T01:30:00Z"
+      "createdAt": "2026-08-19T10:30:00+09:00"
     },
     {
       "messageId": "67b1c2d3e4f5a6b7c8d9e0f2",
@@ -587,11 +589,11 @@ Query
         "imageWidth": null,
         "imageHeight": null,
         "reservationId": "res-1",
-        "meetAt": "2026-08-31T10:10:00Z",
+        "meetAt": "2026-08-31T19:10:00+09:00",
         "price": 1500000,
         "placeName": "해동병원 앞"
       },
-      "createdAt": "2026-08-19T02:00:00Z"
+      "createdAt": "2026-08-19T11:00:00+09:00"
     }
   ]
 }
@@ -699,7 +701,7 @@ STOMP prefix
   "messageType": "TEXT",
   "content": "안녕하세요",
   "metadata": null,
-  "createdAt": "2026-08-20T05:00:00Z"
+  "createdAt": "2026-08-20T14:00:00+09:00"
 }
 ```
 
@@ -720,10 +722,10 @@ TEXT의 `last_message.content`는 본문, IMAGE는 `사진이 공유 되었습�
   "roomId": "aaaaaaaaaaaaaaaaaaaaaaaa",
   "lastMessage": {
     "content": "안녕하세요",
-    "createdAt": "2026-08-20T05:00:00Z"
+    "createdAt": "2026-08-20T14:00:00+09:00"
   },
   "unreadCount": 1,
-  "updatedAt": "2026-08-20T05:00:00Z"
+  "updatedAt": "2026-08-20T14:00:00+09:00"
 }
 ```
 

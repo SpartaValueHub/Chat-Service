@@ -1,5 +1,6 @@
 package com.sparta.chat_service.adaptor.in.websocket.controller;
 
+import com.sparta.chat_service.adaptor.in.SeoulDateTimes;
 import com.sparta.chat_service.adaptor.in.web.vo.ErrorResponseVo;
 import com.sparta.chat_service.adaptor.in.websocket.vo.ChatMessagePayloadVo;
 import com.sparta.chat_service.adaptor.in.websocket.vo.SendChatMessageRequestVo;
@@ -101,7 +102,7 @@ public class StompChatController {
 				.messageType(itemDto.getMessageType())
 				.content(itemDto.getContent())
 				.metadata(toMetadata(itemDto.getMetadata()))
-				.createdAt(itemDto.getCreatedAt())
+				.createdAt(SeoulDateTimes.toSeoul(itemDto.getCreatedAt()))
 				.build();
 	}
 
@@ -114,7 +115,7 @@ public class StompChatController {
 				.imageWidth(metadataDto.getImageWidth())
 				.imageHeight(metadataDto.getImageHeight())
 				.reservationId(metadataDto.getReservationId())
-				.meetAt(metadataDto.getMeetAt())
+				.meetAt(SeoulDateTimes.toSeoul(metadataDto.getMeetAt()))
 				.price(metadataDto.getPrice())
 				.placeName(metadataDto.getPlaceName())
 				.latitude(metadataDto.getLatitude())
@@ -124,7 +125,7 @@ public class StompChatController {
 
 	private ErrorResponseVo error(HttpStatus status, String code, String message) {
 		return ErrorResponseVo.builder()
-				.timestamp(Instant.now())
+				.timestamp(SeoulDateTimes.toSeoul(Instant.now()))
 				.status(status.value())
 				.code(code)
 				.message(message)

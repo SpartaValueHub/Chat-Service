@@ -1,5 +1,6 @@
 package com.sparta.chat_service.adaptor.in.web;
 
+import com.sparta.chat_service.adaptor.in.SeoulDateTimes;
 import com.sparta.chat_service.adaptor.in.web.vo.ErrorResponseVo;
 import com.sparta.chat_service.domain.exception.CannotChatWithSelfException;
 import com.sparta.chat_service.domain.exception.ChatAuthMissingException;
@@ -105,7 +106,7 @@ public class GlobalExceptionHandler {
 	) {
 		return ResponseEntity.status(status)
 				.body(ErrorResponseVo.builder()
-						.timestamp(Instant.now())
+						.timestamp(SeoulDateTimes.toSeoul(Instant.now()))
 						.status(status.value())
 						.code(code)
 						.message(message)
