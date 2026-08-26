@@ -6,6 +6,9 @@ spring:
     import: optional:file:.env[.properties]
   mongodb:
     uri: ${SPRING_MONGODB_URI}
+  kafka:
+    listener:
+      auto-startup: false
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/valuehub_chat?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
     username: ${SPRING_DATASOURCE_USERNAME:root}

@@ -548,7 +548,7 @@ Query
 | messages[].metadata.longitude | number |
 | messages[].createdAt | string (ISO-8601, Asia/Seoul) |
 
-`messageType`: `TEXT` `IMAGE` `LOCATION` `RESERVATION`. TEXT는 `metadata`가 `null`입니다. LOCATION의 `content`는 `null`입니다. IMAGE의 `content`는 CloudFront URL입니다. DB에는 `s3Key`를 저장합니다.
+`messageType`: `TEXT` `IMAGE` `LOCATION` `RESERVATION`. TEXT는 `metadata`가 `null`입니다. LOCATION의 `content`는 `null`입니다. IMAGE의 `content`는 CloudFront URL입니다. DB에는 `s3Key`를 저장합니다. `RESERVATION` 말풍선은 클라이언트가 보내지 않습니다. `reservation.events` `CREATED` 컨슈머가 insert하고 헤더는 예약중(`RESERVED`)입니다.
 
 ```json
 {
@@ -645,7 +645,7 @@ STOMP prefix
 
 | 필드 | 타입 | 필수 | 제약 |
 |------|------|------|------|
-| messageType | string | X | 기본 `TEXT`. 이 단계 `TEXT` `IMAGE` `LOCATION` |
+| messageType | string | X | 기본 `TEXT`. 이 단계 `TEXT` `IMAGE` `LOCATION`. `RESERVATION`은 거절. 말풍선은 `reservation.events` 컨슈머가 insert |
 | content | string | 타입별 | TEXT=본문, IMAGE=s3Key. LOCATION은 null |
 | metadata | object | 타입별 | IMAGE=용량·가로·세로. LOCATION=위도·경도·장소명(선택). TEXT는 null |
 

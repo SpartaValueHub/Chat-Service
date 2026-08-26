@@ -204,8 +204,9 @@ class SendChatMessageServiceTest {
 
 	@Test
 	void send_rejectsReservationType() {
-		assertThrows(InvalidChatRoomRequestException.class,
+		InvalidChatRoomRequestException thrown = assertThrows(InvalidChatRoomRequestException.class,
 				() -> service.send(command(SENDER_UUID, "예약", MessageType.RESERVATION, null)));
+		assertEquals("RESERVATION 타입은 일반 전송으로 보낼 수 없습니다.", thrown.getMessage());
 		assertEquals(0, listPublisher.published.size());
 	}
 
