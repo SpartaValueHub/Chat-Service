@@ -4,7 +4,7 @@ import com.sparta.chat_service.domain.model.TradeStatus;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
 // 채팅 목록 한 줄
 @Getter
@@ -16,7 +16,7 @@ public class ChatRoomListItemResponseVo {
 	private final Counterpart counterpart;
 	private final LastMessage lastMessage;
 	private final int unreadCount;
-	private final Instant updatedAt;
+	private final OffsetDateTime updatedAt;
 
 	@Getter
 	@Builder
@@ -41,6 +41,6 @@ public class ChatRoomListItemResponseVo {
 	public static class LastMessage {
 
 		private final String content;
-		private final Instant createdAt;
+		private final OffsetDateTime createdAt;
 	}
 }

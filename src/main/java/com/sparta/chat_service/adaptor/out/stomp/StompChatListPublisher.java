@@ -1,5 +1,6 @@
 package com.sparta.chat_service.adaptor.out.stomp;
 
+import com.sparta.chat_service.adaptor.in.SeoulDateTimes;
 import com.sparta.chat_service.adaptor.in.websocket.vo.ChatListPreviewVo;
 import com.sparta.chat_service.application.port.out.PublishChatListPreviewPort;
 import com.sparta.chat_service.application.port.out.dto.ChatListPreviewDto;
@@ -30,10 +31,10 @@ public class StompChatListPublisher implements PublishChatListPreviewPort {
 				.roomId(preview.getRoomId())
 				.lastMessage(lastMessage == null ? null : ChatListPreviewVo.LastMessage.builder()
 						.content(lastMessage.getContent())
-						.createdAt(lastMessage.getCreatedAt())
+						.createdAt(SeoulDateTimes.toSeoul(lastMessage.getCreatedAt()))
 						.build())
 				.unreadCount(preview.getUnreadCount())
-				.updatedAt(preview.getUpdatedAt())
+				.updatedAt(SeoulDateTimes.toSeoul(preview.getUpdatedAt()))
 				.build();
 	}
 }

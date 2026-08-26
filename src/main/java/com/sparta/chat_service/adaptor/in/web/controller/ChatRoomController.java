@@ -1,5 +1,6 @@
 package com.sparta.chat_service.adaptor.in.web.controller;
 
+import com.sparta.chat_service.adaptor.in.SeoulDateTimes;
 import com.sparta.chat_service.adaptor.in.web.vo.ChatMessageListResponseVo;
 import com.sparta.chat_service.adaptor.in.web.vo.ChatRoomDetailResponseVo;
 import com.sparta.chat_service.adaptor.in.web.vo.ChatRoomListItemResponseVo;
@@ -149,7 +150,7 @@ public class ChatRoomController {
 				.counterpart(toCounterpartVo(itemDto.getCounterpart()))
 				.lastMessage(toLastMessageVo(itemDto.getLastMessage()))
 				.unreadCount(itemDto.getUnreadCount())
-				.updatedAt(itemDto.getUpdatedAt())
+				.updatedAt(SeoulDateTimes.toSeoul(itemDto.getUpdatedAt()))
 				.build();
 	}
 
@@ -181,7 +182,7 @@ public class ChatRoomController {
 		}
 		return ChatRoomListItemResponseVo.LastMessage.builder()
 				.content(lastMessageDto.getContent())
-				.createdAt(lastMessageDto.getCreatedAt())
+				.createdAt(SeoulDateTimes.toSeoul(lastMessageDto.getCreatedAt()))
 				.build();
 	}
 
@@ -241,7 +242,7 @@ public class ChatRoomController {
 				.messageType(itemDto.getMessageType())
 				.content(itemDto.getContent())
 				.metadata(toMetadataVo(itemDto.getMetadata()))
-				.createdAt(itemDto.getCreatedAt())
+				.createdAt(SeoulDateTimes.toSeoul(itemDto.getCreatedAt()))
 				.build();
 	}
 
@@ -254,7 +255,7 @@ public class ChatRoomController {
 				.imageWidth(metadataDto.getImageWidth())
 				.imageHeight(metadataDto.getImageHeight())
 				.reservationId(metadataDto.getReservationId())
-				.meetAt(metadataDto.getMeetAt())
+				.meetAt(SeoulDateTimes.toSeoul(metadataDto.getMeetAt()))
 				.price(metadataDto.getPrice())
 				.placeName(metadataDto.getPlaceName())
 				.latitude(metadataDto.getLatitude())
