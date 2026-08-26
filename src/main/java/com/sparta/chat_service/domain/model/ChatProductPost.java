@@ -74,6 +74,18 @@ public class ChatProductPost {
 				.build();
 	}
 
+	// CREATED 예약 이벤트: 헤더 예약중. 이벤트에 RESERVED 문자열이 없어 Chat이 세팅한다.
+	public ChatProductPost markReserved() {
+		return ChatProductPost.builder()
+				.productPostUuid(this.productPostUuid)
+				.productPostImageUrl(this.productPostImageUrl)
+				.productPostName(this.productPostName)
+				.price(this.price)
+				.tradeStatus(TradeStatus.RESERVED)
+				.updatedAt(LocalDateTime.now())
+				.build();
+	}
+
 	// 상품 게시글상세 스냅샷 갱신
 	public ChatProductPost update(
 			String productPostImageUrl,

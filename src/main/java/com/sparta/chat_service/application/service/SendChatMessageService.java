@@ -94,6 +94,9 @@ public class SendChatMessageService implements SendChatMessageUseCase {
 		if (messageType == MessageType.LOCATION) {
 			return ChatMessage.createLocation(roomId, senderUuid, toLocationMetadata(command.getMetadata()));
 		}
+		if (messageType == MessageType.RESERVATION) {
+			throw new InvalidChatRoomRequestException("RESERVATION 타입은 일반 전송으로 보낼 수 없습니다.");
+		}
 		String content = requireText(command.getContent(), "content는 필수입니다.");
 		if (messageType == MessageType.TEXT) {
 			return ChatMessage.createText(roomId, senderUuid, content);

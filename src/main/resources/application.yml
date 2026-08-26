@@ -17,6 +17,17 @@ spring:
   # servlet 스택 기준 (WebSocket/STOMP). WebFlux는 보조로 유지
   main:
     web-application-type: servlet
+  kafka:
+    consumer:
+      group-id: chat-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      enable-auto-commit: true
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.sparta.chat_service.adaptor.in.kafka.ReservationEventPayload
 
 eureka:
   client:
