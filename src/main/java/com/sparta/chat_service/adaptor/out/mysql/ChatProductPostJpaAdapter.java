@@ -56,7 +56,7 @@ public class ChatProductPostJpaAdapter implements LoadChatProductPostPort, SaveC
 				productPost.getPrice(),
 				productPost.getTradeStatus()
 		);
-		return chatProductPostJpaMapper.toDomain(entity);
+		return chatProductPostJpaMapper.toDomain(chatProductPostJpaRepository.save(entity));
 	}
 
 	private ChatProductPost insertNew(ChatProductPost productPost) {

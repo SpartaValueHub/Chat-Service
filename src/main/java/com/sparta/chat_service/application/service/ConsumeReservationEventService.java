@@ -23,6 +23,7 @@ import com.sparta.chat_service.domain.model.MessageMetadata;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -47,6 +48,7 @@ public class ConsumeReservationEventService implements ConsumeReservationEventUs
 	private final SaveChatProductPostPort saveChatProductPostPort;
 
 	@Override
+	@Transactional
 	public void consume(ReservationEventCommandDto command) {
 		if (command == null || isBlank(command.getEventType())) {
 			return;
@@ -81,9 +83,9 @@ public class ConsumeReservationEventService implements ConsumeReservationEventUs
 		));
 		LastMessage lastMessage = LastMessage.create(saved.getContent(), saved.getCreatedAt());
 		updateChatRoomLastMessagePort.updateLastMessage(room.getId(), lastMessage);
-		markHeaderReserved(productPost);
+		ChatProductPost reservedPost = markHeaderReserved(productPost);
 		markReadForViewers(room, sellerUuid, saved.getCreatedAt());
-		publishListPreviews(room, sellerUuid, lastMessage);
+		publishListPreviews(room, sellerUuid, lastMessage, reservedPost);
 		publishChatRoomMessagePort.publish(room.getId(), toItem(saved));
 	}
 
@@ -95,12 +97,12 @@ public class ConsumeReservationEventService implements ConsumeReservationEventUs
 		return loadChatProductPostPort.findByProductPostUuid(productPostUuid).orElse(null);
 	}
 
-	private void markHeaderReserved(ChatProductPost productPost) {
+	private ChatProductPost markHeaderReserved(ChatProductPost productPost) {
 		if (productPost == null) {
 			log.warn("reservation.events CREATED: product snapshot missing, header skipped");
-			return;
+			return null;
 		}
-		saveChatProductPostPort.save(productPost.markReserved());
+		return saveChatProductPostPort.save(productPost.markReserved());
 	}
 
 	private void markReadForViewers(ChatRoom room, String senderUuid, Instant lastReadAt) {
@@ -115,7 +117,12 @@ public class ConsumeReservationEventService implements ConsumeReservationEventUs
 		}
 	}
 
-	private void publishListPreviews(ChatRoom room, String senderUuid, LastMessage lastMessage) {
+	private void publishListPreviews(
+			ChatRoom room,
+			String senderUuid,
+			LastMessage lastMessage,
+			ChatProductPost productPost
+	) {
 		for (String memberUuid : room.participantUuids()) {
 			publishChatListPreviewPort.publish(memberUuid, ChatListPreviewDto.builder()
 					.roomId(room.getId())
@@ -125,8 +132,22 @@ public class ConsumeReservationEventService implements ConsumeReservationEventUs
 							.build())
 					.unreadCount(unreadCountFor(room, senderUuid, memberUuid))
 					.updatedAt(lastMessage.getCreatedAt())
+					.productPost(toListProduct(productPost))
 					.build());
 		}
+	}
+
+	private ChatListPreviewDto.ProductPost toListProduct(ChatProductPost productPost) {
+		if (productPost == null) {
+			return null;
+		}
+		return ChatListPreviewDto.ProductPost.builder()
+				.productPostUuid(productPost.getProductPostUuid())
+				.productPostImageUrl(productPost.getProductPostImageUrl())
+				.productPostName(productPost.getProductPostName())
+				.price(productPost.getPrice())
+				.tradeStatus(productPost.getTradeStatus())
+				.build();
 	}
 
 	private int unreadCountFor(ChatRoom room, String senderUuid, String memberUuid) {

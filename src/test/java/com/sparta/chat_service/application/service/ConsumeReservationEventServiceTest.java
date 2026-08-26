@@ -5,11 +5,13 @@ import com.sparta.chat_service.application.port.in.dto.ReservationEventCommandDt
 import com.sparta.chat_service.application.port.out.LoadChatMessagePort;
 import com.sparta.chat_service.application.port.out.LoadChatProductPostPort;
 import com.sparta.chat_service.application.port.out.LoadChatRoomPort;
+import com.sparta.chat_service.application.port.out.PublishChatListPreviewPort;
 import com.sparta.chat_service.application.port.out.PublishChatRoomMessagePort;
 import com.sparta.chat_service.application.port.out.SaveChatMessagePort;
 import com.sparta.chat_service.application.port.out.SaveChatProductPostPort;
 import com.sparta.chat_service.application.port.out.UpdateChatRoomLastMessagePort;
 import com.sparta.chat_service.application.port.out.UpdateParticipantLastReadPort;
+import com.sparta.chat_service.application.port.out.dto.ChatListPreviewDto;
 import com.sparta.chat_service.domain.model.ChatMessage;
 import com.sparta.chat_service.domain.model.ChatProductPost;
 import com.sparta.chat_service.domain.model.ChatRoom;
@@ -45,6 +47,7 @@ class ConsumeReservationEventServiceTest {
 	private InMemoryChatMessageStore messageStore;
 	private InMemoryChatProductPostStore productPostStore;
 	private RecordingRoomPublisher roomPublisher;
+	private RecordingListPublisher listPublisher;
 	private ConsumeReservationEventService service;
 
 	@BeforeEach
@@ -53,6 +56,7 @@ class ConsumeReservationEventServiceTest {
 		messageStore = new InMemoryChatMessageStore();
 		productPostStore = new InMemoryChatProductPostStore();
 		roomPublisher = new RecordingRoomPublisher();
+		listPublisher = new RecordingListPublisher();
 		service = new ConsumeReservationEventService(
 				roomStore,
 				messageStore,
@@ -60,8 +64,7 @@ class ConsumeReservationEventServiceTest {
 				roomStore,
 				(memberUuid, roomId) -> false,
 				messageStore,
-				(memberUuid, preview) -> {
-				},
+				listPublisher,
 				roomPublisher,
 				productPostStore,
 				productPostStore
@@ -105,6 +108,9 @@ class ConsumeReservationEventServiceTest {
 		assertEquals(1, roomPublisher.published.size());
 		assertEquals(ROOM_ID, roomPublisher.published.get(0).roomId);
 		assertEquals(MessageType.RESERVATION, roomPublisher.published.get(0).message.getMessageType());
+		assertEquals(2, listPublisher.published.size());
+		assertEquals(TradeStatus.RESERVED, listPublisher.published.get(0).preview.getProductPost().getTradeStatus());
+		assertEquals(PRODUCT_POST_UUID, listPublisher.published.get(0).preview.getProductPost().getProductPostUuid());
 	}
 
 	@Test
@@ -267,6 +273,26 @@ class ConsumeReservationEventServiceTest {
 		public ChatProductPost save(ChatProductPost productPost) {
 			posts.put(productPost.getProductPostUuid(), productPost);
 			return productPost;
+		}
+	}
+
+	private static final class RecordingListPublisher implements PublishChatListPreviewPort {
+
+		private final List<Published> published = new ArrayList<>();
+
+		@Override
+		public void publish(String memberUuid, ChatListPreviewDto preview) {
+			published.add(new Published(memberUuid, preview));
+		}
+
+		private static final class Published {
+			private final String memberUuid;
+			private final ChatListPreviewDto preview;
+
+			private Published(String memberUuid, ChatListPreviewDto preview) {
+				this.memberUuid = memberUuid;
+				this.preview = preview;
+			}
 		}
 	}
 
