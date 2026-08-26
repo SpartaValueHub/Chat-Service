@@ -19,6 +19,8 @@ public class ChatProductPost {
 	private final Long price;
 	// 거래 상태
 	private final TradeStatus tradeStatus;
+	// 상품 게시글 상태
+	private final ProductPostStatus productPostStatus;
 	// 스냅샷 수정 시각
 	private final LocalDateTime updatedAt;
 
@@ -29,6 +31,7 @@ public class ChatProductPost {
 			String productPostName,
 			Long price,
 			TradeStatus tradeStatus,
+			ProductPostStatus productPostStatus,
 			LocalDateTime updatedAt
 	) {
 		this.productPostUuid = productPostUuid;
@@ -36,6 +39,7 @@ public class ChatProductPost {
 		this.productPostName = productPostName;
 		this.price = price;
 		this.tradeStatus = tradeStatus;
+		this.productPostStatus = productPostStatus;
 		this.updatedAt = updatedAt;
 	}
 
@@ -46,12 +50,31 @@ public class ChatProductPost {
 			Long price,
 			TradeStatus tradeStatus
 	) {
+		return create(
+				productPostUuid,
+				productPostImageUrl,
+				productPostName,
+				price,
+				tradeStatus,
+				ProductPostStatus.PUBLIC
+		);
+	}
+
+	public static ChatProductPost create(
+			String productPostUuid,
+			String productPostImageUrl,
+			String productPostName,
+			Long price,
+			TradeStatus tradeStatus,
+			ProductPostStatus productPostStatus
+	) {
 		return ChatProductPost.builder()
 				.productPostUuid(productPostUuid)
 				.productPostImageUrl(productPostImageUrl)
 				.productPostName(productPostName)
 				.price(price)
 				.tradeStatus(tradeStatus)
+				.productPostStatus(productPostStatus == null ? ProductPostStatus.PUBLIC : productPostStatus)
 				.updatedAt(LocalDateTime.now())
 				.build();
 	}
@@ -62,6 +85,7 @@ public class ChatProductPost {
 			String productPostName,
 			Long price,
 			TradeStatus tradeStatus,
+			ProductPostStatus productPostStatus,
 			LocalDateTime updatedAt
 	) {
 		return ChatProductPost.builder()
@@ -70,6 +94,7 @@ public class ChatProductPost {
 				.productPostName(productPostName)
 				.price(price)
 				.tradeStatus(tradeStatus)
+				.productPostStatus(productPostStatus)
 				.updatedAt(updatedAt)
 				.build();
 	}
@@ -79,7 +104,8 @@ public class ChatProductPost {
 			String productPostImageUrl,
 			String productPostName,
 			Long price,
-			TradeStatus tradeStatus
+			TradeStatus tradeStatus,
+			ProductPostStatus productPostStatus
 	) {
 		return ChatProductPost.builder()
 				.productPostUuid(this.productPostUuid)
@@ -87,6 +113,7 @@ public class ChatProductPost {
 				.productPostName(productPostName)
 				.price(price)
 				.tradeStatus(tradeStatus)
+				.productPostStatus(productPostStatus)
 				.updatedAt(LocalDateTime.now())
 				.build();
 	}

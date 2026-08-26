@@ -15,6 +15,7 @@ import com.sparta.chat_service.domain.model.ChatProductPost;
 import com.sparta.chat_service.domain.model.ChatRoom;
 import com.sparta.chat_service.domain.model.ChatUserProfile;
 import com.sparta.chat_service.domain.model.Participant;
+import com.sparta.chat_service.domain.model.ProductPostStatus;
 import com.sparta.chat_service.domain.model.TradeStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -66,7 +67,8 @@ public class CreateChatRoomService implements CreateChatRoomUseCase {
 				productPostImageUrl,
 				productPostName,
 				price,
-				tradeStatus
+				tradeStatus,
+				ProductPostStatus.PUBLIC
 		));
 
 		return loadChatRoomPort.findByProductPostAndMembers(productPostUuid, buyerUuid, sellerUuid)

@@ -1,5 +1,6 @@
 package com.sparta.chat_service.adaptor.out.mysql.entity;
 
+import com.sparta.chat_service.domain.model.ProductPostStatus;
 import com.sparta.chat_service.domain.model.TradeStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -43,6 +44,11 @@ public class ChatProductPostEntity {
 	@Column(name = "trade_status", nullable = false, length = 20)
 	private TradeStatus tradeStatus;
 
+	// 상품 게시글 상태 (PUBLIC: 등록됨, DELETED: 삭제됨)
+	@Enumerated(EnumType.STRING)
+	@Column(name = "product_post_status", nullable = false, length = 20)
+	private ProductPostStatus productPostStatus;
+
 	// 스냅샷 수정 시각
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
@@ -54,6 +60,7 @@ public class ChatProductPostEntity {
 			String productPostName,
 			Long price,
 			TradeStatus tradeStatus,
+			ProductPostStatus productPostStatus,
 			LocalDateTime updatedAt
 	) {
 		this.productPostUuid = productPostUuid;
@@ -61,6 +68,7 @@ public class ChatProductPostEntity {
 		this.productPostName = productPostName;
 		this.price = price;
 		this.tradeStatus = tradeStatus;
+		this.productPostStatus = productPostStatus;
 		this.updatedAt = updatedAt;
 	}
 
@@ -69,7 +77,8 @@ public class ChatProductPostEntity {
 			String productPostImageUrl,
 			String productPostName,
 			Long price,
-			TradeStatus tradeStatus
+			TradeStatus tradeStatus,
+			ProductPostStatus productPostStatus
 	) {
 		return ChatProductPostEntity.builder()
 				.productPostUuid(productPostUuid)
@@ -77,16 +86,24 @@ public class ChatProductPostEntity {
 				.productPostName(productPostName)
 				.price(price)
 				.tradeStatus(tradeStatus)
+				.productPostStatus(productPostStatus)
 				.updatedAt(LocalDateTime.now())
 				.build();
 	}
 
 	// 상품 게시글상세 스냅샷 갱신
-	public void update(String productPostImageUrl, String productPostName, Long price, TradeStatus tradeStatus) {
+	public void update(
+			String productPostImageUrl,
+			String productPostName,
+			Long price,
+			TradeStatus tradeStatus,
+			ProductPostStatus productPostStatus
+	) {
 		this.productPostImageUrl = productPostImageUrl;
 		this.productPostName = productPostName;
 		this.price = price;
 		this.tradeStatus = tradeStatus;
+		this.productPostStatus = productPostStatus;
 		this.updatedAt = LocalDateTime.now();
 	}
 }

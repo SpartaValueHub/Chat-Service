@@ -163,6 +163,7 @@ public class ChatRoomController {
 				.productPostName(productDto.getProductPostName())
 				.price(productDto.getPrice())
 				.tradeStatus(productDto.getTradeStatus())
+				.productPostStatus(productDto.getProductPostStatus())
 				.build();
 	}
 
@@ -204,6 +205,7 @@ public class ChatRoomController {
 				.productPostName(productDto.getProductPostName())
 				.price(productDto.getPrice())
 				.tradeStatus(productDto.getTradeStatus())
+				.productPostStatus(productDto.getProductPostStatus())
 				.build();
 	}
 

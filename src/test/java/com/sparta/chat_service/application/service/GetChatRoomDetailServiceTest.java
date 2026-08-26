@@ -17,6 +17,7 @@ import com.sparta.chat_service.domain.model.ChatRoomStatus;
 import com.sparta.chat_service.domain.model.ChatUserProfile;
 import com.sparta.chat_service.domain.model.MemberGrade;
 import com.sparta.chat_service.domain.model.Participant;
+import com.sparta.chat_service.domain.model.ProductPostStatus;
 import com.sparta.chat_service.domain.model.TradeStatus;
 import com.sparta.chat_service.domain.model.ChatMessage;
 import com.sparta.chat_service.domain.model.MessageType;
@@ -104,6 +105,7 @@ class GetChatRoomDetailServiceTest {
 		assertEquals("버버리 레더 포켓 미니 토트백", result.getProductPost().getProductPostName());
 		assertEquals(1500000L, result.getProductPost().getPrice());
 		assertEquals(TradeStatus.RESERVED, result.getProductPost().getTradeStatus());
+		assertEquals(ProductPostStatus.PUBLIC, result.getProductPost().getProductPostStatus());
 		assertEquals(SELLER_UUID, result.getSeller().getMemberUuid());
 		assertEquals("숭남농홍길동", result.getSeller().getNickname());
 		assertEquals(SELLER_UUID, result.getCounterpart().getMemberUuid());

@@ -14,6 +14,7 @@ import com.sparta.chat_service.domain.model.ChatRoomStatus;
 import com.sparta.chat_service.domain.model.LastMessage;
 import com.sparta.chat_service.domain.model.MessageType;
 import com.sparta.chat_service.domain.model.Participant;
+import com.sparta.chat_service.domain.model.ProductPostStatus;
 import com.sparta.chat_service.domain.model.TradeStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -88,6 +89,7 @@ class ListChatRoomsServiceTest {
 		assertEquals("room-1", item.getRoomId());
 		assertEquals("중고 노트북", item.getProductPost().getProductPostName());
 		assertEquals(350000L, item.getProductPost().getPrice());
+		assertEquals(ProductPostStatus.PUBLIC, item.getProductPost().getProductPostStatus());
 		assertEquals(SELLER_UUID, item.getCounterpart().getMemberUuid());
 		assertEquals("안녕하세요", item.getLastMessage().getContent());
 		assertEquals(0, item.getUnreadCount());

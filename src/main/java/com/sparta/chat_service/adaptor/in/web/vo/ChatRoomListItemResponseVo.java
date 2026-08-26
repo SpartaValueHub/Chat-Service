@@ -1,5 +1,6 @@
 package com.sparta.chat_service.adaptor.in.web.vo;
 
+import com.sparta.chat_service.domain.model.ProductPostStatus;
 import com.sparta.chat_service.domain.model.TradeStatus;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,6 +28,7 @@ public class ChatRoomListItemResponseVo {
 		private final String productPostName;
 		private final Long price;
 		private final TradeStatus tradeStatus;
+		private final ProductPostStatus productPostStatus;
 	}
 
 	@Getter

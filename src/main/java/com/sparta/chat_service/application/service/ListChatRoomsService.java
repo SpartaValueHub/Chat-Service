@@ -102,6 +102,7 @@ public class ListChatRoomsService implements ListChatRoomsUseCase {
 				.productPostName(productPost.getProductPostName())
 				.price(productPost.getPrice())
 				.tradeStatus(productPost.getTradeStatus())
+				.productPostStatus(productPost.getProductPostStatus())
 				.build();
 	}
 

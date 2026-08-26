@@ -13,6 +13,7 @@ import com.sparta.chat_service.domain.exception.InvalidChatRoomRequestException;
 import com.sparta.chat_service.domain.model.ChatProductPost;
 import com.sparta.chat_service.domain.model.ChatRoom;
 import com.sparta.chat_service.domain.model.ChatUserProfile;
+import com.sparta.chat_service.domain.model.ProductPostStatus;
 import com.sparta.chat_service.domain.model.TradeStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,6 +72,7 @@ class CreateChatRoomServiceTest {
 		assertEquals("중고 노트북", productPost.getProductPostName());
 		assertEquals(350000L, productPost.getPrice());
 		assertEquals(TradeStatus.SELLING, productPost.getTradeStatus());
+		assertEquals(ProductPostStatus.PUBLIC, productPost.getProductPostStatus());
 
 		ChatUserProfile seller = profileStore.profiles.get(SELLER_UUID);
 		assertEquals("판매자닉", seller.getNickname());
